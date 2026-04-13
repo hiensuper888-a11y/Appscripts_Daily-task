@@ -1,0 +1,436 @@
+<!-- Login.html -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Daily Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --bg-body: #f4f7f6;
+            --white: #ffffff;
+            --error: #e53e3e;
+            --success: #38a169;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-body) 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: var(--white);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05), 0 20px 48px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 40px 20px 30px;
+            text-align: center;
+            color: var(--white);
+        }
+
+        .auth-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .auth-header p {
+            font-weight: 300;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .google-account-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 13px;
+            margin-top: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            cursor: pointer;
+            color: var(--text-light);
+            font-weight: 500;
+            border-bottom: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .form-container {
+            padding: 35px 40px;
+        }
+
+        .form-section {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        
+        .form-control:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .col {
+            flex: 1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .msg-box {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .msg-error {
+            background-color: #fed7d7;
+            color: var(--error);
+            border: 1px solid #feb2b2;
+        }
+        
+        .msg-success {
+            background-color: #c6f6d5;
+            color: var(--success);
+            border: 1px solid #9ae6b4;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        .btn.loading span {
+            display: none;
+        }
+        
+        .btn.loading .spinner {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Setup for Google App password hint */
+        .info-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Daily Task Manager</h1>
+            <p>Hệ thống quản lý công việc chuyên nghiệp</p>
+            <div class="google-account-badge">
+                <span id="googleEmailDisp">👤 Đang truy cập với: <?= data.userEmail ?></span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">Đăng nhập</div>
+            <div class="tab" onclick="switchTab('register')">Đăng ký mới</div>
+        </div>
+
+        <div class="form-container">
+            <div id="global-msg" class="msg-box"></div>
+
+            <!-- LOGIN SCETION -->
+            <div id="login-section" class="form-section active">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email cố định (Từ Google Account)</label>
+                        <input type="email" class="form-control" name="email" value="<?= data.userEmail ?>" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mật khẩu ứng dụng</label>
+                        <input type="password" class="form-control" name="password" required placeholder="Nhập mật khẩu bạn đã tạo cho App">
+                        <div class="info-text">Đây là mật khẩu dành riêng cho ứng dụng này, không phải mật khẩu tài khoản Google của bạn.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="btnLogin">
+                        <span>Đăng nhập hệ thống</span>
+                        <div class="spinner"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- REGISTER SECTION -->
+            <div id="register-section" class="form-section">
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="row">
+                        <div class="col form-group">
+                            <label>Email liên kết</label>
+                            <input type="email" class="form-control" name="email" value="<?= data.userEmail ?>" disabled>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Họ và Tên <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="name" required placeholder="Vd: Nguyễn Văn A">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col form-group">
+                            <label>Số điện thoại <span style="color:red">*</span></label>
+                            <input type="tel" class="form-control" name="phone" required placeholder="Vd: 0912345678">
+                        </div>
+                        <div class="col form-group">
+                            <label>Ngày sinh</label>
+                            <input type="date" class="form-control" name="dob">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col form-group">
+                            <label>Giới tính</label>
+                            <select class="form-control" name="gender">
+                                <option value="male">Nam</option>
+                                <option value="female">Nữ</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Địa chỉ</label>
+                        <input type="text" class="form-control" name="address" placeholder="Tỉnh/Thành phố hiện tại">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tạo mật khẩu ứng dụng <span style="color:red">*</span></label>
+                        <input type="password" class="form-control" name="password" id="regPassword" required placeholder="Tạo mật khẩu an toàn">
+                    </div>
+                    
+                    <button type="submit" class="btn" id="btnRegister">
+                        <span>Đăng ký tài khoản</span>
+                        <div class="spinner"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId + '-section').classList.add('active');
+            
+            // Hide messages
+            const msgBox = document.getElementById('global-msg');
+            msgBox.style.display = 'none';
+        }
+
+        function showMessage(msg, type) {
+            const msgBox = document.getElementById('global-msg');
+            msgBox.textContent = msg;
+            msgBox.className = 'msg-box msg-' + type;
+            msgBox.style.display = 'block';
+        }
+
+        function setLoading(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const form = e.target;
+            const password = form.password.value;
+            
+            setLoading('btnLogin', true);
+            
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response.success) {
+                        showMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                        setTimeout(() => {
+                           // Reload page to enter the main app
+                           top.location.href = top.location.href; 
+                        }, 1000);
+                    } else {
+                        showMessage(response.message, 'error');
+                        setLoading('btnLogin', false);
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showMessage('Lỗi kết nối máy chủ: ' + err.message, 'error');
+                    setLoading('btnLogin', false);
+                })
+                .login(password);
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const form = e.target;
+            
+            const data = {
+                name: form.name.value,
+                phone: form.phone.value,
+                dob: form.dob.value,
+                gender: form.gender.value,
+                address: form.address.value,
+                password: form.password.value
+            };
+            
+            if (data.password.length < 6) {
+                showMessage('Mật khẩu phải từ 6 ký tự trở lên.', 'error');
+                return;
+            }
+            
+            setLoading('btnRegister', true);
+            
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response.success) {
+                        showMessage(response.message, 'success');
+                        form.reset();
+                        // Automatically switch to login tab after success
+                        setTimeout(() => {
+                             switchTab('login');
+                             // Find the first tab element and make it active manually for UI sync
+                             document.querySelectorAll('.tab')[0].classList.add('active');
+                             document.querySelectorAll('.tab')[1].classList.remove('active');
+                        }, 3000);
+                    } else {
+                        showMessage(response.message, 'error');
+                    }
+                    setLoading('btnRegister', false);
+                })
+                .withFailureHandler(function(err) {
+                    showMessage('Lỗi kết nối máy chủ: ' + err.message, 'error');
+                    setLoading('btnRegister', false);
+                })
+                .registerUser(data);
+        }
+    </script>
+</body>
+</html>
