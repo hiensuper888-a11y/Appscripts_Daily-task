@@ -1,0 +1,402 @@
+<!-- AdminView.html -->
+<template id="tpl-admin">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="font-size: 20px; margin: 0;">Quản trị Hệ thống</h2>
+    </div>
+
+    <!-- Admin Top Stats -->
+    <div class="grid-4" id="adminStatsContainer">
+        <div class="loader" style="margin: auto; grid-column: span 4;"></div>
+    </div>
+    
+    <!-- Admin Tabs -->
+    <div class="card" style="padding: 0; margin-bottom: 25px;">
+        <div style="display: flex; border-bottom: 1px solid var(--border-color);">
+            <div class="admin-tab active" onclick="switchAdminTab('users', this)">Quản lý Người dùng</div>
+            <div class="admin-tab" onclick="switchAdminTab('feedback', this)">Phản hồi (Feedback)</div>
+            <div class="admin-tab" onclick="switchAdminTab('email', this)">Gửi Email Thông báo</div>
+        </div>
+        
+        <div class="admin-tab-content active" id="admin-tab-users" style="padding: 20px;">
+            <div class="table-container">
+                <table class="table" style="font-size: 14px;">
+                    <thead>
+                        <tr>
+                            <th>Tên & Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Phân quyền</th>
+                            <th>Tình trạng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminUsersTableBody">
+                        <!-- js injection -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="admin-tab-content" id="admin-tab-feedback" style="padding: 20px;">
+            <div class="table-container">
+                <table class="table" style="font-size: 14px;">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Người gửi</th>
+                            <th>Nội dung</th>
+                            <th>Trạng thái Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminFeedbackTableBody">
+                        <!-- js injection -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="admin-tab-content" id="admin-tab-email" style="padding: 20px;">
+            <div style="max-width: 600px;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">Tính năng này sẽ sử dụng định dạng Email có Logo thiết lập sẵn. Giới hạn quota: ~100 email/ngày đối với tài khoản Gmail cá nhân.</p>
+                
+                <form id="adminBulkEmailForm" onsubmit="handleAdminSendEmail(event)">
+                    <div class="form-group">
+                        <label class="form-label">Gửi tới</label>
+                        <select class="form-control" name="recipients" required>
+                            <option value="all">Tất cả người dùng trên hệ thống</option>
+                            <option value="admins">Chỉ Quản trị viên</option>
+                            <option value="custom">Chỉ định một Email...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="adminCustomEmailContainer" style="display:none;">
+                        <input type="email" class="form-control" name="customEmail" placeholder="Nhập địa chỉ email người nhận">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tiêu đề (Subject)</label>
+                        <input type="text" class="form-control" name="subject" required placeholder="[Thông báo hệ thống] ...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nội dung HTML (Rich text cơ bản)</label>
+                        <textarea class="form-control" name="message" rows="6" required placeholder="Nhập nội dung thông báo. Cho phép thẻ HTML cơ bản (<b>, <i>, <ul>...)"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Đính kèm ảnh/tài liệu (Tùy chọn)</label>
+                        <input type="file" id="adminEmailFileInput" accept="image/*,.pdf,.doc,.docx" class="form-control" onchange="handleAdminAttach(event)">
+                        <div id="adminEmailAttachList" style="margin-top: 10px; font-size: 12px; color: var(--info);"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="btnAdminSendEmail">
+                        <i class="fas fa-paper-plane"></i> Thực hiện gửi Email Hàng loạt
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Cập nhật quyền người dùng</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" onsubmit="handleAdminUpdateUser(event)">
+                    <input type="hidden" name="userId" id="editUserId">
+                    <div style="margin-bottom: 20px; font-size: 18px; font-weight: 500;" id="editUserNameDisp"></div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Phân quyền</label>
+                        <select class="form-control" name="role" id="editUserRole">
+                            <option value="user">Người dùng cơ bản</option>
+                            <option value="admin">Quản trị viên hệ thống</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tình trạng tài khoản</label>
+                        <select class="form-control" name="status" id="editUserStatus">
+                            <option value="active">Hoạt động bính thường</option>
+                            <option value="disabled">Khóa tài khoản</option>
+                        </select>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="btnEditUserSave">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+    .admin-tab {
+        padding: 15px 25px;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--text-secondary);
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .admin-tab:hover {
+        background-color: var(--bg-body);
+    }
+    .admin-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background-color: rgba(102, 126, 234, 0.05);
+    }
+    .admin-tab-content {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+    .admin-tab-content.active {
+        display: block;
+    }
+</style>
+
+<script>
+    let adminEmailAttachments = [];
+
+    function initAdmin() {
+        if (!window.CURRENT_USER || window.CURRENT_USER.role !== 'admin') {
+            app.navigate('dashboard');
+            showToast('Bạn không có quyền truy cập', 'error');
+            return;
+        }
+        
+        loadAdminStats();
+        loadSystemUsers();
+        
+        // Setup dropdown listener
+        const sel = document.querySelector('select[name="recipients"]');
+        if(sel) {
+            sel.addEventListener('change', function(e) {
+                document.getElementById('adminCustomEmailContainer').style.display = e.target.value === 'custom' ? 'block' : 'none';
+            });
+        }
+    }
+    
+    function switchAdminTab(tabName, el) {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+        
+        el.classList.add('active');
+        document.getElementById(`admin-tab-${tabName}`).classList.add('active');
+        
+        if (tabName === 'users') loadSystemUsers();
+        if (tabName === 'feedback') loadSystemFeedback();
+    }
+    
+    function loadAdminStats() {
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    const html = `
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--primary); color: white;"><i class="fas fa-users"></i></div>
+                            <div class="stat-info"><h3>${res.data.users}</h3><p>Tài khoản</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--success); color: white;"><i class="fas fa-tasks"></i></div>
+                            <div class="stat-info"><h3>${res.data.tasks}</h3><p>Công việc</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--warning); color: white;"><i class="fas fa-layer-group"></i></div>
+                            <div class="stat-info"><h3>${res.data.groups}</h3><p>Nhóm tạo ra</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--info); color: white;"><i class="fas fa-comments"></i></div>
+                            <div class="stat-info"><h3>${res.data.messages}</h3><p>Tin nhắn nội bộ</p></div>
+                        </div>
+                    `;
+                    document.getElementById('adminStatsContainer').innerHTML = html;
+                }
+            })
+            .getAdminStats();
+    }
+    
+    function loadSystemUsers() {
+        const body = document.getElementById('adminUsersTableBody');
+        body.innerHTML = '<tr><td colspan="5" align="center"><div class="loader"></div></td></tr>';
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    let html = '';
+                    window._adminUsersCache = res.data; // temp cache
+                    
+                    res.data.forEach(u => {
+                        const isMe = window.CURRENT_USER.userId === u.userId;
+                        const roleBadge = u.role === 'admin' ? '<span class="badge badge-in-progress">Admin</span>' : '<span class="badge" style="background:#e2e8f0;color:#4a5568;">User</span>';
+                        const stBadge = u.status === 'active' ? '<span class="badge badge-completed">Hoạt động</span>' : '<span class="badge badge-overdue">Đã khóa</span>';
+                        
+                        html += `
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;">${u.name} ${isMe ? '<span style="color:var(--text-muted);font-size:11px;">(Bạn)</span>' : ''}</div>
+                                    <div style="color:var(--text-secondary);font-size:12px;">${u.email}</div>
+                                </td>
+                                <td>${u.phone || 'Chưa cập nhật'}</td>
+                                <td>${roleBadge}</td>
+                                <td>${stBadge}</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openEditUser('${u.userId}')" ${isMe ? 'disabled' : ''}>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    body.innerHTML = html;
+                }
+            })
+            .getSystemUsers();
+    }
+    
+    function loadSystemFeedback() {
+        const body = document.getElementById('adminFeedbackTableBody');
+        body.innerHTML = '<tr><td colspan="4" align="center"><div class="loader"></div></td></tr>';
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    if (res.data.length === 0) {
+                        body.innerHTML = '<tr><td colspan="4" align="center">Chưa có phản hồi nào.</td></tr>';
+                        return;
+                    }
+                    let html = '';
+                    res.data.forEach(f => {
+                        const emailSt = f.emailSent ? '<i class="fas fa-check" style="color:var(--success)"></i> Đã Forward Admin' : '-';
+                        html += `
+                            <tr>
+                                <td style="white-space:nowrap">${new Date(f.createdAt).toLocaleString()}</td>
+                                <td><b>${f.userName}</b><br><span style="font-size:11px;color:var(--text-secondary)">${f.userEmail}</span></td>
+                                <td style="max-width:300px;">${f.content.replace(/</g, "&lt;")}</td>
+                                <td>${emailSt}</td>
+                            </tr>
+                        `;
+                    });
+                    body.innerHTML = html;
+                }
+            })
+            .getSystemFeedbacks();
+    }
+    
+    function openEditUser(userId) {
+        if (!window._adminUsersCache) return;
+        const u = window._adminUsersCache.find(x => x.userId === userId);
+        if(!u) return;
+        
+        document.getElementById('editUserId').value = u.userId;
+        document.getElementById('editUserNameDisp').innerText = u.name + ' (' + u.email + ')';
+        document.getElementById('editUserRole').value = u.role;
+        document.getElementById('editUserStatus').value = u.status;
+        
+        openModal('editUserModal');
+    }
+    
+    function handleAdminUpdateUser(e) {
+        e.preventDefault();
+        const form = e.target;
+        const userId = form.userId.value;
+        const data = {
+            role: form.role.value,
+            status: form.status.value
+        };
+        
+        setBtnLoading('btnEditUserSave', true);
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    showToast(res.message, 'success');
+                    closeModal('editUserModal');
+                    loadSystemUsers();
+                } else {
+                    showToast(res.message, 'error');
+                }
+                setBtnLoading('btnEditUserSave', false);
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                setBtnLoading('btnEditUserSave', false);
+            })
+            .adminUpdateUser(userId, data);
+    }
+    
+    // --- Email Sending Logic ---
+    function handleAdminAttach(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const infoMsg = document.getElementById('adminEmailAttachList');
+        infoMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải file lên Drive...';
+        document.getElementById('btnAdminSendEmail').disabled = true;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = {
+                data: event.target.result,
+                mimeType: file.type,
+                filename: file.name
+            };
+            google.script.run
+                .withSuccessHandler(res => {
+                    if(res.success) {
+                        adminEmailAttachments.push(res.data);
+                        infoMsg.innerHTML = `Đã đính kèm: ${res.data.name} <i class="fas fa-check" style="color:var(--success)"></i>`;
+                    }
+                    document.getElementById('btnAdminSendEmail').disabled = false;
+                })
+                .uploadChatAttachment(JSON.stringify(data)); // Reuser upload fn
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function handleAdminSendEmail(e) {
+        e.preventDefault();
+        const form = e.target;
+        
+        let type = form.recipients.value;
+        if(type === 'custom') {
+            type = form.customEmail.value;
+            if(!type) {
+                showToast('Vui lòng nhập Email người nhận', 'warning');
+                return;
+            }
+        }
+        
+        const subject = form.subject.value;
+        const message = form.message.value;
+        const htmlMessage = message.replace(/\n/g, '<br>');
+        const attachmentsStr = JSON.stringify(adminEmailAttachments);
+        
+        showConfirm(`Bạn chuẩn bị gửi email trực tiếp từ hệ thống đến ${type === 'all' ? 'TẤT CẢ NGƯỜI DÙNG' : type === 'admins' ? 'Các Quản trị viên' : type}. Tiếp tục?`, () => {
+            setBtnLoading('btnAdminSendEmail', true, '<i class="fas fa-paper-plane"></i> Đang gửi...');
+            
+            google.script.run
+                .withSuccessHandler(res => {
+                    if(res.success) {
+                        showToast(res.message, 'success');
+                        form.reset();
+                        adminEmailAttachments = [];
+                        document.getElementById('adminEmailAttachList').innerHTML = '';
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                    setBtnLoading('btnAdminSendEmail', false, '<i class="fas fa-paper-plane"></i> Thực hiện gửi Email Hàng loạt');
+                })
+                .withFailureHandler(err => {
+                    showToast(err.message, 'error');
+                    setBtnLoading('btnAdminSendEmail', false, '<i class="fas fa-paper-plane"></i> Thực hiện gửi Email Hàng loạt');
+                })
+                .adminSendBulks(type, subject, htmlMessage, attachmentsStr);
+        });
+    }
+</script>
