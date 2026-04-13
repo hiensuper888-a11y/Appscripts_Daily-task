@@ -85,7 +85,7 @@ const app = {
         const store = document.getElementById('templatesStore');
         if (!store) return;
         
-        ['dashboard', 'tasks', 'groups', 'chat', 'reports', 'profile', 'admin'].forEach(viewName => {
+        ['dashboard', 'tasks', 'groups', 'chat', 'reports', 'profile', 'admin', 'notifications'].forEach(viewName => {
             const tplId = `tpl-${viewName}`;
             const targetId = `view-${viewName}`;
             const tpl = document.getElementById(tplId);

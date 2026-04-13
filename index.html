@@ -119,6 +119,10 @@
                     <!-- Profile will be loaded here -->
                 </div>
                 
+                <div id="view-notifications" class="view-section">
+                    <!-- Notifications will be loaded here -->
+                </div>
+                
                 <? if (user.role === 'admin') { ?>
                 <div id="view-admin" class="view-section">
                     <!-- Admin will be loaded here -->
@@ -150,6 +154,7 @@
         <? try { ?> <?!= include('ReportView'); ?> <? } catch(e) {} ?>
         <? try { ?> <?!= include('ProfileView'); ?> <? } catch(e) {} ?>
         <? try { ?> <?!= include('AdminView'); ?> <? } catch(e) {} ?>
+        <? try { ?> <?!= include('NotificationsView'); ?> <? } catch(e) {} ?>
     </div>
 </body>
 </html>

@@ -155,3 +155,42 @@ function searchUsers(query) {
   
   return successResponse(safeUsers);
 }
+
+/**
+ * Get ALL notifications for the current user (read + unread)
+ */
+function getAllNotifications() {
+  var sessionRes = getUserSession();
+  if (!sessionRes.success) return sessionRes;
+
+  var userId = sessionRes.data.userId;
+
+  var notifications = getRowsWhere(CONFIG.SHEETS.NOTIFICATIONS, function(r) {
+    return r.userId === userId;
+  }).sort(function(a, b) {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  return successResponse(notifications);
+}
+
+/**
+ * Mark ALL notifications as read for the current user
+ */
+function markAllNotificationsRead() {
+  var sessionRes = getUserSession();
+  if (!sessionRes.success) return sessionRes;
+
+  var userId = sessionRes.data.userId;
+
+  var unread = getRowsWhere(CONFIG.SHEETS.NOTIFICATIONS, function(r) {
+    return r.userId === userId && !r.isRead;
+  });
+
+  unread.forEach(function(n) {
+    updateRowBy(CONFIG.SHEETS.NOTIFICATIONS, 'notifId', n.notifId, { isRead: true });
+  });
+
+  return successResponse({ updated: unread.length }, 'Đã đánh dấu ' + unread.length + ' thông báo là đã đọc.');
+}
+
