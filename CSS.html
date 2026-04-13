@@ -4,9 +4,9 @@
 <link href="https://cdn.jsdelivr.net/npm/chart.js" rel="preload" as="script">
 <style>
     :root {
-        /* Color Palette */
-        --primary: #667eea;
-        --secondary: #764ba2;
+        /* Premium Color Palette (Violet-Blue & Teal) */
+        --primary: #4f46e5;
+        --secondary: #06b6d4;
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
@@ -19,8 +19,8 @@
         --status-overdue: #ef4444;
         
         /* Layout Colors */
-        --bg-body: #f3f4f6;
-        --bg-sidebar: #111827;
+        --bg-body: #f8fafc;
+        --bg-sidebar: #0f172a;
         --bg-card: #ffffff;
         
         /* Text Colors */
@@ -30,10 +30,10 @@
         --text-light: #f3f4f6;
         
         /* Borders & Shadows */
-        --border-color: #e5e7eb;
+        --border-color: rgba(226, 232, 240, 0.8);
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         
         /* Dimensions */
         --sidebar-width: 260px;
@@ -45,12 +45,12 @@
 
     /* Dark Mode (Dynamic switch class) */
     body.dark-mode {
-        --bg-body: #111827;
-        --bg-sidebar: #030712;
-        --bg-card: #1f2937;
-        --text-primary: #f9fafb;
-        --text-secondary: #d1d5db;
-        --border-color: #374151;
+        --bg-body: #0f172a;
+        --bg-sidebar: #020617;
+        --bg-card: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --border-color: rgba(51, 65, 85, 0.6);
         --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     }
 
@@ -92,14 +92,17 @@
         display: flex;
         align-items: center;
         padding: 0 20px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
         background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     }
 
     .sidebar-header img {
-        width: 32px;
-        height: auto;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         margin-right: 12px;
+        object-fit: cover;
     }
 
     .sidebar-header h2 {
@@ -181,7 +184,9 @@
 
     .topbar {
         height: var(--header-height);
-        background-color: var(--bg-card);
+        background-color: rgba(255, 255, 255, 0.85); /* Glassmorphic topbar */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         padding: 0 30px;
         display: flex;
         align-items: center;
@@ -189,6 +194,10 @@
         box-shadow: var(--shadow-sm);
         z-index: 10;
         border-bottom: 1px solid var(--border-color);
+    }
+    
+    body.dark-mode .topbar {
+        background-color: rgba(30, 41, 59, 0.85);
     }
 
     .page-title {

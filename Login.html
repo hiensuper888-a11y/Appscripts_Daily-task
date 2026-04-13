@@ -8,14 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --text-dark: #2d3748;
-            --text-light: #718096;
-            --bg-body: #f4f7f6;
+            --primary: #4f46e5; /* Deep Violet Blue */
+            --secondary: #06b6d4; /* Vibrant Teal */
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-body: #f8fafc;
             --white: #ffffff;
-            --error: #e53e3e;
-            --success: #38a169;
+            --error: #ef4444;
+            --success: #10b981;
         }
 
         * {
@@ -26,7 +26,10 @@
         }
 
         body {
-            background: linear-gradient(135deg, var(--bg-body) 0%, #e2e8f0 100%);
+            /* Animated gradient background */
+            background: linear-gradient(-45deg, #4f46e5, #0ea5e9, #06b6d4, #6366f1);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -34,49 +37,103 @@
             padding: 20px;
         }
 
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Abstract shapes behind cards */
+        .shape {
+            position: absolute;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.6;
+        }
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: #a855f7;
+            top: -100px;
+            left: -100px;
+            border-radius: 50%;
+        }
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background: #2dd4bf;
+            bottom: -50px;
+            right: -50px;
+            border-radius: 50%;
+        }
+
         .auth-container {
-            background: var(--white);
+            /* Glassmorphism */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            
             width: 100%;
-            max-width: 480px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05), 0 20px 48px rgba(0,0,0,0.05);
+            max-width: 460px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             overflow: hidden;
             position: relative;
+            z-index: 10;
         }
 
         .auth-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 40px 20px 30px;
+            padding: 40px 30px 20px;
             text-align: center;
-            color: var(--white);
+            position: relative;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            display: block;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            object-fit: cover;
         }
 
         .auth-header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             letter-spacing: 0.5px;
         }
 
         .auth-header p {
-            font-weight: 300;
+            font-weight: 400;
             font-size: 14px;
-            opacity: 0.9;
+            color: var(--text-light);
         }
 
         .google-account-badge {
-            background: rgba(255,255,255,0.2);
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
             padding: 8px 15px;
             border-radius: 20px;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             font-size: 13px;
-            margin-top: 15px;
-            backdrop-filter: blur(5px);
+            font-weight: 500;
+            margin-top: 20px;
+            border: 1px solid rgba(79, 70, 229, 0.2);
         }
 
         .tabs {
             display: flex;
-            background: rgba(255,255,255,0.1);
+            padding: 0 30px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
         .tab {
@@ -86,17 +143,35 @@
             cursor: pointer;
             color: var(--text-light);
             font-weight: 500;
-            border-bottom: 2px solid #e2e8f0;
             transition: all 0.3s ease;
+            position: relative;
+            font-size: 15px;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            border-radius: 3px 3px 0 0;
         }
 
         .tab.active {
             color: var(--primary);
-            border-bottom: 2px solid var(--primary);
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            transform: scaleX(1);
         }
 
         .form-container {
-            padding: 35px 40px;
+            padding: 10px 40px 40px;
         }
 
         .form-section {
@@ -116,58 +191,71 @@
             display: block;
             margin-bottom: 8px;
             color: var(--text-dark);
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-control {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 12px;
             font-size: 15px;
             transition: all 0.3s ease;
             outline: none;
             color: var(--text-dark);
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            border-color: var(--secondary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
         }
         
         .form-control:disabled {
-            background-color: #f7fafc;
-            color: #a0aec0;
+            background-color: rgba(241, 245, 249, 0.8);
+            color: #94a3b8;
             cursor: not-allowed;
+            border-color: transparent;
         }
 
-        .row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .col {
-            flex: 1;
-        }
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s;
+        }
+
+        .btn:hover::after {
+            left: 100%;
         }
         
         .btn:disabled {
@@ -181,20 +269,22 @@
             padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
             display: none;
+            animation: fadeIn 0.3s ease;
         }
         
         .msg-error {
-            background-color: #fed7d7;
+            background-color: rgba(254, 226, 226, 0.9);
             color: var(--error);
-            border: 1px solid #feb2b2;
+            border-left: 4px solid var(--error);
         }
         
         .msg-success {
-            background-color: #c6f6d5;
+            background-color: rgba(209, 250, 229, 0.9);
             color: var(--success);
-            border: 1px solid #9ae6b4;
+            border-left: 4px solid var(--success);
         }
 
         .spinner {
@@ -208,13 +298,8 @@
             margin: 0 auto;
         }
         
-        .btn.loading span {
-            display: none;
-        }
-        
-        .btn.loading .spinner {
-            display: block;
-        }
+        .btn.loading span { display: none; }
+        .btn.loading .spinner { display: block; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -225,23 +310,27 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Setup for Google App password hint */
         .info-text {
             font-size: 12px;
             color: var(--text-light);
-            margin-top: 5px;
-            line-height: 1.4;
+            margin-top: 6px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
 
     <div class="auth-container">
         <div class="auth-header">
+            <!-- Render the injected LOGO from Config -->
+            <img src="<?= CONFIG.LOGO_URL ?>" alt="App Logo" class="logo-img" id="loginLogo">
             <h1>Daily Task Manager</h1>
-            <p>Hệ thống quản lý công việc chuyên nghiệp</p>
+            <p>Không gian làm việc & Quản lý dự án tối ưu</p>
             <div class="google-account-badge">
-                <span id="googleEmailDisp">👤 Đang truy cập với: <?= data.userEmail ?></span>
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                <span id="googleEmailDisp"><?= data.userEmail ?></span>
             </div>
         </div>
 
@@ -253,22 +342,21 @@
         <div class="form-container">
             <div id="global-msg" class="msg-box"></div>
 
-            <!-- LOGIN SCETION -->
+            <!-- LOGIN SECTION -->
             <div id="login-section" class="form-section active">
                 <form id="loginForm" onsubmit="handleLogin(event)">
                     <div class="form-group">
-                        <label>Email cố định (Từ Google Account)</label>
+                        <label>Tài khoản Email</label>
                         <input type="email" class="form-control" name="email" value="<?= data.userEmail ?>" disabled>
                     </div>
                     
                     <div class="form-group">
                         <label>Mật khẩu ứng dụng</label>
-                        <input type="password" class="form-control" name="password" required placeholder="Nhập mật khẩu bạn đã tạo cho App">
-                        <div class="info-text">Đây là mật khẩu dành riêng cho ứng dụng này, không phải mật khẩu tài khoản Google của bạn.</div>
+                        <input type="password" class="form-control" name="password" required placeholder="••••••••">
                     </div>
                     
                     <button type="submit" class="btn" id="btnLogin">
-                        <span>Đăng nhập hệ thống</span>
+                        <span>Truy cập hệ thống</span>
                         <div class="spinner"></div>
                     </button>
                 </form>
@@ -277,22 +365,15 @@
             <!-- REGISTER SECTION -->
             <div id="register-section" class="form-section">
                 <form id="registerForm" onsubmit="handleRegister(event)">
-                    <div class="row">
-                        <div class="col form-group">
-                            <label>Email liên kết</label>
-                            <input type="email" class="form-control" name="email" value="<?= data.userEmail ?>" disabled>
-                        </div>
-                    </div>
-                    
                     <div class="form-group">
-                        <label>Họ và Tên <span style="color:red">*</span></label>
-                        <input type="text" class="form-control" name="name" required placeholder="Vd: Nguyễn Văn A">
+                        <label>Họ và Tên</label>
+                        <input type="text" class="form-control" name="name" required placeholder="Nguyễn Văn A">
                     </div>
                     
                     <div class="row">
                         <div class="col form-group">
-                            <label>Số điện thoại <span style="color:red">*</span></label>
-                            <input type="tel" class="form-control" name="phone" required placeholder="Vd: 0912345678">
+                            <label>Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" required placeholder="0912xxx">
                         </div>
                         <div class="col form-group">
                             <label>Ngày sinh</label>
@@ -309,6 +390,10 @@
                                 <option value="other">Khác</option>
                             </select>
                         </div>
+                        <div class="col form-group">
+                            <label>Mật khẩu App</label>
+                            <input type="password" class="form-control" name="password" id="regPassword" required placeholder="An toàn 6 ký tự">
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -316,13 +401,8 @@
                         <input type="text" class="form-control" name="address" placeholder="Tỉnh/Thành phố hiện tại">
                     </div>
                     
-                    <div class="form-group">
-                        <label>Tạo mật khẩu ứng dụng <span style="color:red">*</span></label>
-                        <input type="password" class="form-control" name="password" id="regPassword" required placeholder="Tạo mật khẩu an toàn">
-                    </div>
-                    
                     <button type="submit" class="btn" id="btnRegister">
-                        <span>Đăng ký tài khoản</span>
+                        <span>Hoàn tất đăng ký</span>
                         <div class="spinner"></div>
                     </button>
                 </form>
@@ -338,7 +418,6 @@
             event.target.classList.add('active');
             document.getElementById(tabId + '-section').classList.add('active');
             
-            // Hide messages
             const msgBox = document.getElementById('global-msg');
             msgBox.style.display = 'none';
         }
@@ -365,17 +444,13 @@
             e.preventDefault();
             const form = e.target;
             const password = form.password.value;
-            
             setLoading('btnLogin', true);
             
             google.script.run
                 .withSuccessHandler(function(response) {
                     if (response.success) {
-                        showMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
-                        setTimeout(() => {
-                           // Reload page to enter the main app
-                           top.location.href = top.location.href; 
-                        }, 1000);
+                        showMessage('Đăng nhập thành công! Đang vào hệ thống...', 'success');
+                        setTimeout(() => { top.location.href = top.location.href; }, 1000);
                     } else {
                         showMessage(response.message, 'error');
                         setLoading('btnLogin', false);
@@ -391,7 +466,6 @@
         function handleRegister(e) {
             e.preventDefault();
             const form = e.target;
-            
             const data = {
                 name: form.name.value,
                 phone: form.phone.value,
@@ -407,26 +481,23 @@
             }
             
             setLoading('btnRegister', true);
-            
             google.script.run
                 .withSuccessHandler(function(response) {
                     if (response.success) {
-                        showMessage(response.message, 'success');
+                        showMessage('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
                         form.reset();
-                        // Automatically switch to login tab after success
                         setTimeout(() => {
                              switchTab('login');
-                             // Find the first tab element and make it active manually for UI sync
                              document.querySelectorAll('.tab')[0].classList.add('active');
                              document.querySelectorAll('.tab')[1].classList.remove('active');
-                        }, 3000);
+                        }, 2000);
                     } else {
                         showMessage(response.message, 'error');
                     }
                     setLoading('btnRegister', false);
                 })
                 .withFailureHandler(function(err) {
-                    showMessage('Lỗi kết nối máy chủ: ' + err.message, 'error');
+                    showMessage('Lỗi mạng: ' + err.message, 'error');
                     setLoading('btnRegister', false);
                 })
                 .registerUser(data);
