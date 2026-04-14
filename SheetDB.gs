@@ -43,16 +43,32 @@ function initializeSheets() {
 
   Object.keys(schemas).forEach(function(sheetName) {
     var sheet = ss.getSheetByName(sheetName);
+    var expectedHeaders = schemas[sheetName];
+    
     if (!sheet) {
       sheet = ss.insertSheet(sheetName);
-      var headers = schemas[sheetName];
-      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
       // Style header row
-      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      var headerRange = sheet.getRange(1, 1, 1, expectedHeaders.length);
       headerRange.setBackground('#1a73e8');
       headerRange.setFontColor('#ffffff');
       headerRange.setFontWeight('bold');
       sheet.setFrozenRows(1);
+    } else {
+      // Sync Missing Headers Dynamically
+      var lastCol = sheet.getLastColumn() || 1;
+      var currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var missingHeaders = expectedHeaders.filter(function(h) {
+          return currentHeaders.indexOf(h) === -1 && h !== ''; 
+      });
+      
+      if (missingHeaders.length > 0) {
+        sheet.getRange(1, lastCol + 1, 1, missingHeaders.length).setValues([missingHeaders]);
+        var newHeaderRange = sheet.getRange(1, lastCol + 1, 1, missingHeaders.length);
+        newHeaderRange.setBackground('#1a73e8');
+        newHeaderRange.setFontColor('#ffffff');
+        newHeaderRange.setFontWeight('bold');
+      }
     }
   });
   

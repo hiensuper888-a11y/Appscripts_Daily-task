@@ -17,7 +17,6 @@ function doGet(e) {
     console.error("Error initializing sheets: " + err);
   }
   
-  // Setup routing based on query params (e.g., ?page=login)
   var page = e.parameter.page || 'index';
   var template;
   
@@ -27,10 +26,11 @@ function doGet(e) {
   
   if (!sessionResult.success) {
     // Force login if not authenticated
-    // Unless trying to verify email
     if (page === 'verify') {
-      return HtmlService.createTemplateFromFile('VerifyView')
-        .evaluate()
+      var verifyTemplate = HtmlService.createTemplateFromFile('VerifyView');
+      verifyTemplate.token = e.parameter.token || '';
+      verifyTemplate.appUrl = scriptUrl;
+      return verifyTemplate.evaluate()
         .setTitle(CONFIG.APP_NAME + ' - Xác nhận Email')
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .addMetaTag('viewport', 'width=device-width, initial-scale=1');

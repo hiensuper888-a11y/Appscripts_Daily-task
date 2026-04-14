@@ -71,6 +71,12 @@ function loginWithGoogle() {
   
   updateRowBy(CONFIG.SHEETS.USERS, 'userId', user.userId, { lastLogin: now() });
   
+  try {
+     sendLoginNotification(email, user.name);
+  } catch(e) {
+     logError('loginWithGoogle', 'Failed to send login notification: ' + e);
+  }
+  
   delete user.appPassword;
   delete user.verifyToken;
   delete user.passwordResetToken;

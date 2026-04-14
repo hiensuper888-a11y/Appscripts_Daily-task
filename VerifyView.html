@@ -204,12 +204,8 @@
     </div>
 
     <script>
-        // We read the token from the URL
-        var token = '';
-        try {
-            var params = new URLSearchParams(window.location.search);
-            token = params.get('token') || '';
-        } catch(e) {}
+        // We read the token injected straight from the server context
+        var token = '<?= token ?>';
 
         function setState(state) {
             ['loading','success','error'].forEach(function(s) {
@@ -219,7 +215,7 @@
         }
 
         function goToLogin() {
-            top.location.href = window.location.href.split('?')[0];
+            top.location.href = '<?= appUrl ?>';
         }
 
         // Auto-run verification on page load
@@ -233,12 +229,12 @@
 
             setState('loading');
 
-            window.server
+            google.script.run
                 .withSuccessHandler(function(response) {
                     if (response.success) {
                         setState('success');
                         // Try to show the active google email
-                        window.server
+                        google.script.run
                             .withSuccessHandler(function(email){ 
                                 var el = document.getElementById('successEmail');
                                 if (el && email) el.textContent = email;
