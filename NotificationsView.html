@@ -67,7 +67,7 @@
         const list = document.getElementById('notificationsList');
         list.innerHTML = '<div class="loader" style="margin: 60px auto;"></div>';
 
-        google.script.run
+        window.server
             .withSuccessHandler(function(res) {
                 if (res.success) {
                     _notifData = res.data || [];
@@ -185,7 +185,7 @@
         }
 
         // Mark read on server
-        google.script.run
+        window.server
             .withSuccessHandler(function() {
                 // Update local data
                 var notif = _notifData.find(function(n) { return n.notifId === notifId; });
@@ -211,7 +211,7 @@
 
         setBtnLoading('btnMarkAllRead', true, '<i class="fas fa-check-double"></i> Đánh dấu tất cả đã đọc');
 
-        google.script.run
+        window.server
             .withSuccessHandler(function(res) {
                 setBtnLoading('btnMarkAllRead', false, '<i class="fas fa-check-double"></i> Đánh dấu tất cả đã đọc');
                 if (res.success) {

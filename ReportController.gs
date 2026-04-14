@@ -5,8 +5,8 @@
 /**
  * Get report data (Personal or Group)
  */
-function getReportData(type, id, timeRange) {
-  var sessionRes = getUserSession();
+function getReportData(sid, type, id, timeRange) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -107,8 +107,8 @@ function getReportData(type, id, timeRange) {
 /**
  * Export report to Google Sheets (+ auto convert to Excel if requested)
  */
-function exportReport(reportDataStr, format) {
-  var sessionRes = getUserSession();
+function exportReport(sid, reportDataStr, format) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;

@@ -134,7 +134,7 @@
         select.innerHTML = `<option value="${window.CURRENT_USER.userId}">Bạn (${window.CURRENT_USER.email})</option>`;
         
         // This would be replaced with actual Group fetch later
-        // google.script.run.withSuccessHandler(...).getGroups();
+        // window.server.withSuccessHandler(...).getGroups();
     }
 
     function loadTasks() {
@@ -145,7 +145,7 @@
             document.getElementById(`list-${l}`).innerHTML = '<div class="loader" style="margin: 20px auto;"></div>';
         });
 
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if (res.success) {
                     globalTasksCache = res.data;
@@ -251,7 +251,7 @@
             // We need to implement server update
             showToast('Đang cập nhật...', 'info');
             
-            google.script.run
+            window.server
                 .withSuccessHandler(res => {
                     if(res.success) {
                         loadTasks(); // reload full board to apply logic correctly
@@ -300,7 +300,7 @@
         
         setBtnLoading('btnSaveTask', true);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     showToast(res.message, 'success');
@@ -355,7 +355,7 @@
             onAction: function() {
                 showConfirm('Bạn có chắc chắn muốn xóa việc này? Hành động này không thể hoàn tác.', () => {
                     closeModal('globalModal');
-                    google.script.run
+                    window.server
                         .withSuccessHandler(r => { 
                             showToast(r.message, r.success?'success':'error'); 
                             if(r.success) loadTasks();

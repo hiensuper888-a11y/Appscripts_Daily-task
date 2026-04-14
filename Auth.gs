@@ -5,9 +5,8 @@
 /**
  * Login user
  */
-function login(password) {
-  var email = getActiveUserEmail();
-  if (!email) return errorResponse('Không thể lấy được email Google Account. Vui lòng đăng nhập Google.');
+function login(email, password) {
+  if (!email) return errorResponse('Vui lòng nhập Email đăng nhập.');
   
   var user = getRowBy(CONFIG.SHEETS.USERS, 'email', email);
   if (!user) return errorResponse('Tài khoản chưa được đăng ký. Vui lòng chuyển sang tab Đăng ký.');
@@ -41,15 +40,55 @@ function login(password) {
   delete user.verifyToken;
   delete user.passwordResetToken;
   
+  user.sessionId = sessionId;
+  
+  // Safe stringify and parse to strip Date objects
+  user = safeParse(safeStringify(user));
+  
   return successResponse(user, 'Đăng nhập thành công');
+}
+
+/**
+ * Login directly via active Google account
+ */
+function loginWithGoogle() {
+  var email = getActiveUserEmail();
+  if (!email) return errorResponse('Không thể tải email Google. Hãy cấp quyền truy cập.');
+  
+  var user = getRowBy(CONFIG.SHEETS.USERS, 'email', email);
+  if (!user) return errorResponse('Tài khoản chưa được đăng ký. Xin qua tab Đăng ký mới.');
+  if (user.status !== 'active') return errorResponse('Tài khoản đã bị vô hiệu hóa.');
+  
+  var sessionId = generateUUID();
+  insertRow(CONFIG.SHEETS.SESSIONS, {
+    sessionId: sessionId,
+    userId: user.userId,
+    email: email,
+    loginAt: now(),
+    lastActive: now(),
+    isActive: true
+  });
+  
+  updateRowBy(CONFIG.SHEETS.USERS, 'userId', user.userId, { lastLogin: now() });
+  
+  delete user.appPassword;
+  delete user.verifyToken;
+  delete user.passwordResetToken;
+  
+  user.sessionId = sessionId;
+  
+  // Safe stringify and parse to strip Date objects
+  user = safeParse(safeStringify(user));
+  
+  return successResponse(user, 'Đăng nhập Google thành công');
 }
 
 /**
  * Register new user
  */
 function registerUser(profileData) {
-  var email = getActiveUserEmail();
-  if (!email) return errorResponse('Không thể lấy được email Google. Vui lòng đăng nhập Google Account.');
+  var email = sanitize(profileData.email);
+  if (!email) return errorResponse('Vui lòng cung cấp email hợp lệ.');
   
   var existingUser = getRowBy(CONFIG.SHEETS.USERS, 'email', email);
   if (existingUser) return errorResponse('Email này đã được đăng ký. Vui lòng đăng nhập.');
@@ -100,22 +139,16 @@ function registerUser(profileData) {
 /**
  * Check if the active Google user has a valid active session
  */
-function getUserSession() {
-  var email = getActiveUserEmail();
-  if (!email) return errorResponse('No Google account', 'NO_ACCOUNT');
-  
-  var user = getRowBy(CONFIG.SHEETS.USERS, 'email', email);
-  if (!user) return errorResponse('User not found', 'NOT_REGISTERED');
-  if (user.status !== 'active') return errorResponse('Account inactive', 'INACTIVE');
+function getUserSession(sid) {
+  if (!sid) return errorResponse('No session ID', 'NO_SESSION');
   
   // Find active session
-  var session = getRowsWhere(CONFIG.SHEETS.SESSIONS, function(r) {
-    return r.email === email && r.isActive === true;
-  }).sort(function(a, b) {
-    return new Date(b.loginAt) - new Date(a.loginAt); // Latest first
-  })[0];
+  var session = getRowBy(CONFIG.SHEETS.SESSIONS, 'sessionId', sid);
+  if (!session || !session.isActive) return errorResponse('Session invalid or expired', 'NO_SESSION');
   
-  if (!session) return errorResponse('No active session', 'NO_SESSION');
+  var user = getRowBy(CONFIG.SHEETS.USERS, 'email', session.email);
+  if (!user) return errorResponse('User not found', 'NOT_REGISTERED');
+  if (user.status !== 'active') return errorResponse('Account inactive', 'INACTIVE');
   
   // Check session expiry
   var lastActive = new Date(session.lastActive);
@@ -134,24 +167,18 @@ function getUserSession() {
   delete user.verifyToken;
   delete user.passwordResetToken;
   
+  user = safeParse(safeStringify(user));
+  
   return successResponse(user, 'Session valid');
 }
 
 /**
  * Logout
  */
-function logout() {
-  var email = getActiveUserEmail();
-  if (!email) return successResponse();
+function logout(sid) {
+  if (!sid) return successResponse();
   
-  // Deactivate all sessions for this user
-  var sessions = getRowsWhere(CONFIG.SHEETS.SESSIONS, function(r) {
-    return r.email === email && r.isActive === true;
-  });
-  
-  sessions.forEach(function(session) {
-    updateRowBy(CONFIG.SHEETS.SESSIONS, 'sessionId', session.sessionId, { isActive: false });
-  });
+  updateRowBy(CONFIG.SHEETS.SESSIONS, 'sessionId', sid, { isActive: false });
   
   return successResponse(null, 'Đăng xuất thành công');
 }
@@ -178,21 +205,13 @@ function verifyEmail(token) {
 /**
  * Check User Auth Status for UI init
  */
-function checkAuthStatus() {
-  var email = getActiveUserEmail();
-  if (!email) {
-    return { status: 'NO_GOOGLE_ACCOUNT', email: null };
-  }
+function checkAuthStatus(sid) {
+  if (!sid) return { status: 'NEEDS_LOGIN', email: null };
   
-  var user = getRowBy(CONFIG.SHEETS.USERS, 'email', email);
-  if (!user) {
-    return { status: 'NOT_REGISTERED', email: email };
-  }
-  
-  var sessionRes = getUserSession();
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) {
-    return { status: 'NEEDS_LOGIN', email: email };
+    return { status: 'NEEDS_LOGIN', email: null };
   }
   
-  return { status: 'AUTHENTICATED', email: email, user: sessionRes.data };
+  return { status: 'AUTHENTICATED', email: sessionRes.data.email, user: sessionRes.data };
 }

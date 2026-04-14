@@ -5,8 +5,8 @@
 /**
  * Check if the user has Admin rights
  */
-function verifyAdmin() {
-  var sessionRes = getUserSession();
+function verifyAdmin(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return false;
   return sessionRes.data.role === 'admin';
 }
@@ -14,7 +14,7 @@ function verifyAdmin() {
 /**
  * Provide common admin stats
  */
-function getAdminStats() {
+function getAdminStats(sid) {
   if (!verifyAdmin()) return errorResponse('Truy cập bị từ chối');
   
   var usersCount = countRowsWhere(CONFIG.SHEETS.USERS, function(u) { return true; });
@@ -33,7 +33,7 @@ function getAdminStats() {
 /**
  * Get all users for administration
  */
-function getSystemUsers() {
+function getSystemUsers(sid) {
   if (!verifyAdmin()) return errorResponse('Truy cập bị từ chối');
   
   var rows = getAllRows(CONFIG.SHEETS.USERS);
@@ -61,11 +61,11 @@ function getSystemUsers() {
 /**
  * Update user role/status
  */
-function adminUpdateUser(userId, updates) {
+function adminUpdateUser(sid, userId, updates) {
   if (!verifyAdmin()) return errorResponse('Truy cập bị từ chối');
   
   // Prevent changing self status randomly
-  var me = getUserSession().data;
+  var me = getUserSession(sid).data;
   if (me.userId === userId && updates.status === 'disabled') {
     return errorResponse('Không thể tự khóa tài khoản của chính mình.');
   }
@@ -83,8 +83,8 @@ function adminUpdateUser(userId, updates) {
 /**
  * Submit feedback (from User -> Admin)
  */
-function submitSystemFeedback(content) {
-  var sessionRes = getUserSession();
+function submitSystemFeedback(sid, content) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   var user = sessionRes.data;
   
@@ -114,7 +114,7 @@ function submitSystemFeedback(content) {
 /**
  * Fetch all feedbacks for admin panel
  */
-function getSystemFeedbacks() {
+function getSystemFeedbacks(sid) {
   if (!verifyAdmin()) return errorResponse('Truy cập bị từ chối');
   var fb = getAllRows(CONFIG.SHEETS.FEEDBACK);
   fb.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); });
@@ -125,7 +125,7 @@ function getSystemFeedbacks() {
  * Custom bulk email from Admin/Leader via Sheets/UI
  * (Hook called from UI)
  */
-function adminSendBulks(recipientsType, subject, messageHTML, attachmentsStr) {
+function adminSendBulks(sid, recipientsType, subject, messageHTML, attachmentsStr) {
   if (!verifyAdmin()) return errorResponse('Truy cập bị từ chối');
   
   var usersList = [];

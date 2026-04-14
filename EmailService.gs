@@ -76,7 +76,7 @@ function sendWelcomeEmail(email, name) {
     title: 'Chào mừng bạn đến với ' + CONFIG.APP_NAME,
     name: name,
     message: 'Cảm ơn bạn đã đăng ký tài khoản. Hệ thống quản lý công việc chuyên nghiệp nhất.',
-    actionUrl: CONFIG.APP_URL,
+    actionUrl: getWebAppUrl() || CONFIG.APP_URL,
     actionText: 'Đăng nhập ngay'
   };
   
@@ -92,7 +92,8 @@ function sendWelcomeEmail(email, name) {
  * Send Verification Email
  */
 function sendVerifyEmail(email, name, token) {
-  var verifyUrl = CONFIG.APP_URL + '?page=verify&token=' + token;
+  var appUrl = getWebAppUrl() || CONFIG.APP_URL;
+  var verifyUrl = appUrl + '?page=verify&token=' + token;
   
   var data = {
     title: 'Xác thực tài khoản',
@@ -118,7 +119,7 @@ function sendLoginNotification(email, name) {
     title: 'Cảnh báo đăng nhập',
     name: name,
     message: 'Tài khoản của bạn vừa được đăng nhập thành công vào lúc ' + formatDate(now()) + '. Nếu không phải bạn thực hiện, vui lòng đổi mật khẩu ngay lập tức.',
-    actionUrl: CONFIG.APP_URL,
+    actionUrl: getWebAppUrl() || CONFIG.APP_URL,
     actionText: 'Truy cập ứng dụng'
   };
   
@@ -138,7 +139,7 @@ function sendPasswordChangeConfirm(email, name) {
     title: 'Thay đổi mật khẩu thành công',
     name: name,
     message: 'Mật khẩu đăng nhập ứng dụng của bạn đã được thay đổi thành công.',
-    actionUrl: CONFIG.APP_URL,
+    actionUrl: getWebAppUrl() || CONFIG.APP_URL,
     actionText: 'Đăng nhập lại'
   };
   
@@ -158,7 +159,7 @@ function sendTaskNotification(email, name, taskData, assignerName) {
     title: 'Bạn được giao việc mới',
     name: name,
     message: 'Bạn vừa được <b>' + assignerName + '</b> giao một công việc mới: <b>' + taskData.title + '</b>. Hạn chót: ' + formatDate(taskData.dueDate),
-    actionUrl: CONFIG.APP_URL + '?page=tasks&id=' + taskData.taskId,
+    actionUrl: (getWebAppUrl() || CONFIG.APP_URL) + '?page=tasks&id=' + taskData.taskId,
     actionText: 'Xem chi tiết công việc'
   };
   
@@ -178,7 +179,7 @@ function sendGroupInvite(email, name, groupName, inviterName) {
     title: 'Lời mời tham gia nhóm',
     name: name,
     message: '<b>' + inviterName + '</b> vừa mời bạn tham gia vào nhóm làm việc: <b>' + groupName + '</b>.',
-    actionUrl: CONFIG.APP_URL + '?page=groups',
+    actionUrl: (getWebAppUrl() || CONFIG.APP_URL) + '?page=groups',
     actionText: 'Xem nhóm'
   };
   
@@ -198,7 +199,7 @@ function sendFeedbackToAdmin(feedbackData) {
     title: 'Phản hồi mới từ người dùng',
     name: 'Admin',
     message: 'Người dùng <b>' + feedbackData.userName + '</b> (' + feedbackData.userEmail + ') vừa gửi một phản hồi:<br><br><i>"' + feedbackData.content + '"</i>',
-    actionUrl: CONFIG.APP_URL + '?page=admin',
+    actionUrl: (getWebAppUrl() || CONFIG.APP_URL) + '?page=admin',
     actionText: 'Vào Admin Panel'
   };
   
@@ -218,7 +219,7 @@ function sendCustomEmail(toEmails, subject, messageHTML, attachments) {
     title: 'Thông báo',
     name: 'Bạn',
     message: messageHTML, // Preserved HTML formatting
-    actionUrl: CONFIG.APP_URL,
+    actionUrl: getWebAppUrl() || CONFIG.APP_URL,
     actionText: 'Truy cập ứng dụng'
   };
   

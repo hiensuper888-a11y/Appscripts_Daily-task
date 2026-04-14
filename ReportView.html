@@ -119,7 +119,7 @@
 
     function initReports() {
         // Load groups into select
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if (res.success) {
                     populateSelect('reportGroupSelect', res.data, 'groupId', 'name', '-- Chọn Nhóm --');
@@ -178,7 +178,7 @@
         setBtnLoading('btnGenReport', true, '<i class="fas fa-filter"></i> Lọc dữ liệu');
         document.getElementById('reportResultsSection').style.display = 'none';
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     currentReportData = res.data;
@@ -254,7 +254,7 @@
         const btnId = format === 'sheet' ? 'btnExportSheet' : 'btnExportExcel';
         setBtnLoading(btnId, true);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     showToast('Đã tạo file báo cáo thành công!', 'success');

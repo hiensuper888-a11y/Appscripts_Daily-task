@@ -194,7 +194,7 @@
     }
     
     function loadAdminStats() {
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     const html = `
@@ -225,7 +225,7 @@
         const body = document.getElementById('adminUsersTableBody');
         body.innerHTML = '<tr><td colspan="5" align="center"><div class="loader"></div></td></tr>';
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     let html = '';
@@ -263,7 +263,7 @@
         const body = document.getElementById('adminFeedbackTableBody');
         body.innerHTML = '<tr><td colspan="4" align="center"><div class="loader"></div></td></tr>';
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     if (res.data.length === 0) {
@@ -312,7 +312,7 @@
         
         setBtnLoading('btnEditUserSave', true);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     showToast(res.message, 'success');
@@ -346,7 +346,7 @@
                 mimeType: file.type,
                 filename: file.name
             };
-            google.script.run
+            window.server
                 .withSuccessHandler(res => {
                     if(res.success) {
                         adminEmailAttachments.push(res.data);
@@ -380,7 +380,7 @@
         showConfirm(`Bạn chuẩn bị gửi email trực tiếp từ hệ thống đến ${type === 'all' ? 'TẤT CẢ NGƯỜI DÙNG' : type === 'admins' ? 'Các Quản trị viên' : type}. Tiếp tục?`, () => {
             setBtnLoading('btnAdminSendEmail', true, '<i class="fas fa-paper-plane"></i> Đang gửi...');
             
-            google.script.run
+            window.server
                 .withSuccessHandler(res => {
                     if(res.success) {
                         showToast(res.message, 'success');

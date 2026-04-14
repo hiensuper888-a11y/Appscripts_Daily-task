@@ -5,8 +5,8 @@
 /**
  * Get current user profile
  */
-function getUserProfile() {
-  var sessionRes = getUserSession();
+function getUserProfile(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   return successResponse(sessionRes.data);
@@ -15,8 +15,8 @@ function getUserProfile() {
 /**
  * Update user profile
  */
-function updateProfile(data) {
-  var sessionRes = getUserSession();
+function updateProfile(sid, data) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -59,8 +59,8 @@ function updateProfile(data) {
 /**
  * Change App Password
  */
-function changePassword(oldPassword, newPassword) {
-  var sessionRes = getUserSession();
+function changePassword(sid, oldPassword, newPassword) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = getRowBy(CONFIG.SHEETS.USERS, 'userId', sessionRes.data.userId);
@@ -93,8 +93,8 @@ function changePassword(oldPassword, newPassword) {
 /**
  * Upload Avatar to Drive and update User Profile
  */
-function uploadAvatar(fileDataStr) {
-  var sessionRes = getUserSession();
+function uploadAvatar(sid, fileDataStr) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -130,8 +130,8 @@ function uploadAvatar(fileDataStr) {
 /**
  * Search users by email or name (For assigning tasks, adding to groups)
  */
-function searchUsers(query) {
-  var sessionRes = getUserSession();
+function searchUsers(sid, query) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   if (!query || query.length < 2) return successResponse([]);
@@ -159,8 +159,8 @@ function searchUsers(query) {
 /**
  * Get ALL notifications for the current user (read + unread)
  */
-function getAllNotifications() {
-  var sessionRes = getUserSession();
+function getAllNotifications(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
 
   var userId = sessionRes.data.userId;
@@ -177,8 +177,8 @@ function getAllNotifications() {
 /**
  * Mark ALL notifications as read for the current user
  */
-function markAllNotificationsRead() {
-  var sessionRes = getUserSession();
+function markAllNotificationsRead(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
 
   var userId = sessionRes.data.userId;

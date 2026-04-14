@@ -233,12 +233,12 @@
 
             setState('loading');
 
-            google.script.run
+            window.server
                 .withSuccessHandler(function(response) {
                     if (response.success) {
                         setState('success');
                         // Try to show the active google email
-                        google.script.run
+                        window.server
                             .withSuccessHandler(function(email){ 
                                 var el = document.getElementById('successEmail');
                                 if (el && email) el.textContent = email;

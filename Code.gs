@@ -21,12 +21,13 @@ function doGet(e) {
   var page = e.parameter.page || 'index';
   var template;
   
-  // Check auth state
-  var sessionResult = getUserSession();
+  // Check auth state from explicit SID passed in URL
+  var sid = e.parameter.sid || '';
+  var sessionResult = getUserSession(sid);
   
   if (!sessionResult.success) {
     // Force login if not authenticated
-    // Unless trying to verify email/reset password
+    // Unless trying to verify email
     if (page === 'verify') {
       return HtmlService.createTemplateFromFile('VerifyView')
         .evaluate()
@@ -37,7 +38,7 @@ function doGet(e) {
     
     template = HtmlService.createTemplateFromFile('Login');
     template.data = {
-      userEmail: getActiveUserEmail()
+      userEmail: '' // Decoupled from Google Account
     };
     return template.evaluate()
       .setTitle(CONFIG.APP_NAME + ' - Đăng nhập')

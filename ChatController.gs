@@ -5,8 +5,8 @@
 /**
  * Get messages for a specific group
  */
-function getMessages(groupId, limit) {
-  var sessionRes = getUserSession();
+function getMessages(sid, groupId, limit) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -62,8 +62,8 @@ function getMessages(groupId, limit) {
 /**
  * Send a new message to a group
  */
-function sendMessage(groupId, content, attachmentsStr) {
-  var sessionRes = getUserSession();
+function sendMessage(sid, groupId, content, attachmentsStr) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -102,8 +102,8 @@ function sendMessage(groupId, content, attachmentsStr) {
 /**
  * Upload chat attachment
  */
-function uploadChatAttachment(fileDataStr) {
-  var sessionRes = getUserSession();
+function uploadChatAttachment(sid, fileDataStr) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   try {

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Task Manager - Hệ thống quản lý công việc</title>
+    <title>Daily Task Manager - H�?thống quản lý công việc</title>
     
     <!-- Load CSS Component -->
     <?!= include('CSS'); ?>
@@ -13,7 +13,7 @@
     <!-- Full page loader initially visible -->
     <div id="appLoader" class="full-page-loader">
         <div class="loader"></div>
-        <h4>Đang khởi tạo hệ thống...</h4>
+        <h4>Đang khởi tạo h�?thống...</h4>
     </div>
 
     <!-- MAIN APP SHELL -->
@@ -45,9 +45,9 @@
                 </a>
                 
                 <? if (user.role === 'admin') { ?>
-                <div style="margin: 15px 24px; font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 600;">Hệ thống</div>
+                <div style="margin: 15px 24px; font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 600;">H�?thống</div>
                 <a class="menu-item" onclick="app.navigate('admin')" data-route="admin">
-                    <i class="fas fa-cog"></i> Quản trị Admin
+                    <i class="fas fa-cog"></i> Quản tr�?Admin
                 </a>
                 <? } ?>
             </div>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="user-info-sm">
                         <h4 id="sidebarName"><?= user.name ?></h4>
-                        <p id="sidebarRole"><?= user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên' ?></p>
+                        <p id="sidebarRole"><?= user.role === 'admin' ? 'Quản tr�?viên' : 'Nhân viên' ?></p>
                     </div>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                 </div>
                 
                 <div class="topbar-actions">
-                    <button class="icon-btn" onclick="app.toggleDarkMode()" title="Chế độ tối/sáng">
+                    <button class="icon-btn" onclick="app.toggleDarkMode()" title="Ch�?đ�?tối/sáng">
                         <i class="fas fa-moon" id="themeIcon"></i>
                     </button>
                     <button class="icon-btn" onclick="app.navigate('notifications')" title="Thông báo">

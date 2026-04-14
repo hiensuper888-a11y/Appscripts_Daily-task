@@ -1,5 +1,26 @@
 <!-- JavaScript.html -->
 <script>
+// --- TOKEN-BASED RPC PROXY ---
+// Intercepts google.script.run to automatically prepend the Session ID (dtm_sid).
+window.server = new Proxy(google.script.run, {
+    get: function(target, prop) {
+        if (typeof target[prop] === 'function') {
+            if (['withSuccessHandler', 'withFailureHandler', 'withUserObject'].includes(prop)) {
+                return function(...args) {
+                    const newTarget = target[prop](...args);
+                    return new Proxy(newTarget, this);
+                };
+            } else {
+                return function(...args) {
+                    const sid = localStorage.getItem('dtm_sid') || '';
+                    return target[prop](sid, ...args);
+                };
+            }
+        }
+        return target[prop];
+    }
+});
+
 /**
  * Main Application Logic (SPA Router & Controllers Runner)
  */
@@ -173,8 +194,9 @@ const app = {
             document.getElementById('appLoader').style.display = 'flex';
             document.querySelector('#appLoader h4').innerText = 'Đang đăng xuất...';
             
-            google.script.run
+            window.server
                 .withSuccessHandler(response => {
+                    localStorage.removeItem('dtm_sid');
                     top.location.href = window.location.href.split('?')[0];
                 })
                 .withFailureHandler(err => {

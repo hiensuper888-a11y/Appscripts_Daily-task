@@ -293,7 +293,7 @@
     }
 
     function loadChatGroups() {
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 const list = document.getElementById('chatGroupsList');
                 if (res.success) {
@@ -354,7 +354,7 @@
     function fetchMessages(scrollToBottom = false) {
         if(!activeChatGroupId) return;
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success && activeChatGroupId) {
                     renderMessages(res.data);
@@ -464,7 +464,7 @@
                 filename: file.name
             };
             
-            google.script.run
+            window.server
                 .withSuccessHandler(res => {
                     if(res.success) {
                         pendingAttachments.push(res.data);
@@ -532,7 +532,7 @@
         
         const attachmentsStr = JSON.stringify(pendingAttachments);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     input.value = '';

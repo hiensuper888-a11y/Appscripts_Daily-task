@@ -47,7 +47,7 @@
             <div class="stat-card"><div class="loader" style="margin:auto;"></div></div>
         `;
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if (res.success) {
                     const data = res.data;

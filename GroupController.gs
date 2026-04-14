@@ -5,8 +5,8 @@
 /**
  * Get all groups that the user is a part of
  */
-function getMyGroups() {
-  var sessionRes = getUserSession();
+function getMyGroups(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -38,8 +38,8 @@ function getMyGroups() {
 /**
  * Get group detailed info including members and stats
  */
-function getGroupDetails(groupId) {
-  var sessionRes = getUserSession();
+function getGroupDetails(sid, groupId) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -94,8 +94,8 @@ function getGroupDetails(groupId) {
 /**
  * Create a new group
  */
-function createGroup(data) {
-  var sessionRes = getUserSession();
+function createGroup(sid, data) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -131,8 +131,8 @@ function createGroup(data) {
 /**
  * Add member to group
  */
-function addGroupMember(groupId, emailToAdd) {
-  var sessionRes = getUserSession();
+function addGroupMember(sid, groupId, emailToAdd) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -180,8 +180,8 @@ function addGroupMember(groupId, emailToAdd) {
 /**
  * Remove member
  */
-function removeGroupMember(groupId, userIdToRemove) {
-  var sessionRes = getUserSession();
+function removeGroupMember(sid, groupId, userIdToRemove) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;

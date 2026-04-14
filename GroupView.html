@@ -133,7 +133,7 @@
         const grid = document.getElementById('groupsGrid');
         grid.innerHTML = '<div class="loader" style="margin: 40px auto; grid-column: span 3;"></div>';
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if (res.success) {
                     if (res.data.length === 0) {
@@ -193,7 +193,7 @@
         document.getElementById('detailGroupName').innerHTML = '<div class="loader" style="display:inline-block;width:16px;height:16px;border-width:2px;"></div> Đang tải...';
         document.getElementById('detailGroupMembers').innerHTML = '<tr><td colspan="3" style="text-align:center;"><div class="loader" style="margin:10px auto;width:20px;height:20px;"></div></td></tr>';
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if (res.success) {
                     const data = res.data;
@@ -291,7 +291,7 @@
         
         setBtnLoading('btnSaveGroup', true);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     showToast(res.message, 'success');
@@ -323,7 +323,7 @@
         
         setBtnLoading('btnAddMemberSubmit', true);
         
-        google.script.run
+        window.server
             .withSuccessHandler(res => {
                 if(res.success) {
                     showToast(res.message, 'success');
@@ -343,7 +343,7 @@
     
     function removeMember(userId) {
         showConfirm('Bạn chắc chắn muốn đuổi thành viên này ra khỏi nhóm?', () => {
-            google.script.run
+            window.server
                 .withSuccessHandler(res => {
                     if(res.success) {
                         showToast(res.message, 'success');

@@ -5,8 +5,8 @@
 /**
  * Get tasks for user (Personal + Group tasks assigned to them)
  */
-function getMyTasks(filters) {
-  var sessionRes = getUserSession();
+function getMyTasks(sid, filters) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -56,8 +56,8 @@ function getMyTasks(filters) {
 /**
  * Get summary stats for Dashboard
  */
-function getDashboardStats() {
-  var sessionRes = getUserSession();
+function getDashboardStats(sid) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -94,8 +94,8 @@ function getDashboardStats() {
 /**
  * Create new Task
  */
-function createTask(data) {
-  var sessionRes = getUserSession();
+function createTask(sid, data) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -143,8 +143,8 @@ function createTask(data) {
 /**
  * Update Task Status (Drag and drop)
  */
-function updateTaskStatus(taskId, newStatus) {
-  var sessionRes = getUserSession();
+function updateTaskStatus(sid, taskId, newStatus) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
@@ -192,8 +192,8 @@ function updateTaskStatus(taskId, newStatus) {
 /**
  * Delete task
  */
-function deleteTask(taskId) {
-  var sessionRes = getUserSession();
+function deleteTask(sid, taskId) {
+  var sessionRes = getUserSession(sid);
   if (!sessionRes.success) return sessionRes;
   
   var user = sessionRes.data;
