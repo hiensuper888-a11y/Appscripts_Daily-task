@@ -1,0 +1,358 @@
+<!-- GroupView.html -->
+<template id="tpl-groups">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="font-size: 20px; margin: 0;">Nhóm làm việc của tôi</h2>
+        <button class="btn btn-primary" onclick="openCreateGroupModal()">
+            <i class="fas fa-plus"></i> Tạo nhóm mới
+        </button>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="grid-3" id="groupsGrid">
+        <div class="loader" style="margin: 40px auto; grid-column: span 3;"></div>
+    </div>
+
+    <!-- Group Detail View (Hidden initially) -->
+    <div class="card" id="groupDetailSection" style="display: none;">
+        <div class="card-header">
+            <div>
+                <button class="btn btn-secondary" style="padding: 4px 10px; margin-right: 15px;" onclick="closeGroupDetail()">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </button>
+                <h3 class="card-title" id="detailGroupName" style="display: inline-block;">Tên nhóm</h3>
+            </div>
+            <div id="detailGroupActions">
+                <!-- Actions injected dynamically -->
+            </div>
+        </div>
+        
+        <div class="grid-2">
+            <!-- Members List -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0;">Thành viên nhóm</h4>
+                    <button class="btn btn-outline" id="btnAddMemberBtn" onclick="openAddMemberModal()" style="padding: 4px 10px; font-size: 13px;">
+                        <i class="fas fa-user-plus"></i> Thêm User
+                    </button>
+                </div>
+                
+                <div class="table-container" style="border: 1px solid var(--border-color); border-radius: 8px;">
+                    <table class="table">
+                        <tbody id="detailGroupMembers">
+                            <!-- Injected rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Group Stats -->
+            <div>
+                <h4>Tiến độ công việc</h4>
+                <div class="grid-2" id="detailGroupStats" style="margin-top: 15px; gap: 15px;">
+                    <!-- Stat cards -->
+                </div>
+                
+                <div style="margin-top: 25px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;" id="detailGroupDesc"></p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="app.navigate('tasks')">
+                        <i class="fas fa-tasks"></i> Đi đến Bảng công việc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div class="modal-overlay" id="groupModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Tạo nhóm mới</h3>
+                <button class="modal-close" onclick="closeModal('groupModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="groupForm" onsubmit="handleCreateGroup(event)">
+                    <div class="form-group">
+                        <label class="form-label">Tên nhóm <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="name" required placeholder="Ví dụ: Team Marketing">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Mô tả mục tiêu nhóm</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="..."></textarea>
+                    </div>
+                    
+                     <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('groupModal')">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="btnSaveGroup">
+                            <i class="fas fa-save"></i> Tạo nhóm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Member Modal -->
+    <div class="modal-overlay" id="addMemberModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Thêm thành viên</h3>
+                <button class="modal-close" onclick="closeModal('addMemberModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="addMemberForm" onsubmit="handleAddMember(event)">
+                    <input type="hidden" id="addMemberGroupId" name="groupId">
+                    <div class="form-group">
+                        <label class="form-label">Nhập Email tài khoản cần thêm <span style="color:red">*</span></label>
+                        <input type="email" class="form-control" name="email" required placeholder="user@gmail.com">
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Thành viên cần phải đăng ký tài khoản trên hệ thống trước khi được mởi.</p>
+                    </div>
+                    
+                     <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="btnAddMemberSubmit">
+                            <i class="fas fa-user-plus"></i> Thêm vào nhóm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    let currentGroupId = null;
+
+    function initGroups() {
+        document.getElementById('groupDetailSection').style.display = 'none';
+        document.getElementById('groupsGrid').style.display = 'grid';
+        loadGroups();
+    }
+    
+    function loadGroups() {
+        const grid = document.getElementById('groupsGrid');
+        grid.innerHTML = '<div class="loader" style="margin: 40px auto; grid-column: span 3;"></div>';
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if (res.success) {
+                    if (res.data.length === 0) {
+                        grid.innerHTML = `
+                            <div style="grid-column: span 3; text-align: center; padding: 50px 0; background: var(--bg-card); border-radius: 8px; border: 1px dashed var(--border-color);">
+                                <i class="fas fa-users-slash" style="font-size: 40px; color: var(--text-muted); margin-bottom: 15px;"></i>
+                                <h3>Bạn chưa tham gia nhóm nào</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 20px;">Hãy tạo nhóm mới hoặc chờ người khác mời bạn vào nhóm.</p>
+                                <button class="btn btn-primary" onclick="openCreateGroupModal()">Tạo nhóm ngay</button>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    res.data.forEach(group => {
+                        const badge = group.myRole === 'leader' 
+                                      ? '<span class="badge badge-pending">Nhóm trưởng</span>' 
+                                      : '<span class="badge badge-in-progress">Thành viên</span>';
+                                      
+                        html += `
+                            <div class="card" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onclick="viewGroupDetails('${group.groupId}')">
+                                <div style="display:flex; justify-content: space-between; margin-bottom: 15px;">
+                                    <div class="avatar" style="background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);">
+                                        ${group.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    ${badge}
+                                </div>
+                                <h3 style="font-size: 18px; margin-bottom: 8px;">${group.name}</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; height: 40px; overflow: hidden;">${group.description || 'Không có mô tả'}</p>
+                                
+                                <div style="border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                                    <span><i class="fas fa-users"></i> ${group.memberCount} thành viên</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    grid.innerHTML = html;
+                } else {
+                    showToast(res.message, 'error');
+                }
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+            })
+            .getMyGroups();
+    }
+    
+    function viewGroupDetails(groupId) {
+        currentGroupId = groupId;
+        document.getElementById('groupsGrid').style.display = 'none';
+        
+        const detailSection = document.getElementById('groupDetailSection');
+        detailSection.style.display = 'block';
+        
+        // Reset contents with loaders
+        document.getElementById('detailGroupName').innerHTML = '<div class="loader" style="display:inline-block;width:16px;height:16px;border-width:2px;"></div> Đang tải...';
+        document.getElementById('detailGroupMembers').innerHTML = '<tr><td colspan="3" style="text-align:center;"><div class="loader" style="margin:10px auto;width:20px;height:20px;"></div></td></tr>';
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if (res.success) {
+                    const data = res.data;
+                    const group = data.group;
+                    const isLeader = data.myRole === 'leader' || window.CURRENT_USER.role === 'admin';
+                    
+                    document.getElementById('detailGroupName').innerText = group.name;
+                    document.getElementById('detailGroupDesc').innerText = group.description || '';
+                    
+                    // Toggle add member button visibility
+                    document.getElementById('btnAddMemberBtn').style.display = isLeader ? 'inline-block' : 'none';
+                    
+                    // Render members
+                    let membersHtml = '';
+                    data.members.forEach(m => {
+                        const roleText = m.role === 'leader' ? '<span class="badge badge-pending">Nhóm trưởng</span>' : '<span style="font-size:12px;color:var(--text-secondary)">Thành viên</span>';
+                        let rowAction = '';
+                        
+                        if (isLeader && m.userId !== window.CURRENT_USER.userId) {
+                            rowAction = `<button class="icon-btn" style="color:var(--danger); padding:4px;" title="Xóa" onclick="removeMember('${m.userId}')"><i class="fas fa-user-times"></i></button>`;
+                        }
+                        
+                        // Avoid errors if user data is missing
+                        const userName = m.name || 'Người dùng đã bị xóa';
+                        const userInitial = userName.charAt(0).toUpperCase();
+                        
+                        membersHtml += `
+                            <tr>
+                                <td style="width: 40px; padding-right:0;">
+                                    <div class="avatar" style="width:30px;height:30px;font-size:14px;">${userInitial}</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500; font-size:14px;">${userName}</div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">${m.email || ''}</div>
+                                </td>
+                                <td style="text-align: right; width: 100px;">
+                                    ${roleText}
+                                    ${rowAction}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('detailGroupMembers').innerHTML = membersHtml;
+                    
+                    // Render Stats
+                    const stats = data.stats;
+                    document.getElementById('detailGroupStats').innerHTML = `
+                        <div class="card" style="padding: 15px; margin: 0; box-shadow: none; border-left: 3px solid var(--info);">
+                            <div style="font-size:20px; font-weight:700;">${stats.total}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">Tổng Task</div>
+                        </div>
+                        <div class="card" style="padding: 15px; margin: 0; box-shadow: none; border-left: 3px solid var(--success);">
+                            <div style="font-size:20px; font-weight:700;">${stats.completed}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">Hoàn thành</div>
+                        </div>
+                        <div class="card" style="padding: 15px; margin: 0; box-shadow: none; border-left: 3px solid var(--warning);">
+                            <div style="font-size:20px; font-weight:700;">${stats.in_progress}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">Đang làm</div>
+                        </div>
+                        <div class="card" style="padding: 15px; margin: 0; box-shadow: none; border-left: 3px solid var(--danger);">
+                            <div style="font-size:20px; font-weight:700;">${stats.overdue}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">Quá hạn</div>
+                        </div>
+                    `;
+                } else {
+                    showToast(res.message, 'error');
+                    closeGroupDetail();
+                }
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                closeGroupDetail();
+            })
+            .getGroupDetails(groupId);
+    }
+    
+    function closeGroupDetail() {
+        currentGroupId = null;
+        document.getElementById('groupDetailSection').style.display = 'none';
+        document.getElementById('groupsGrid').style.display = 'grid';
+    }
+
+    // --- Create Group Form ---
+    function openCreateGroupModal() {
+        document.getElementById('groupForm').reset();
+        openModal('groupModal');
+    }
+    
+    function handleCreateGroup(e) {
+        e.preventDefault();
+        const data = {
+            name: e.target.name.value,
+            description: e.target.description.value
+        };
+        
+        setBtnLoading('btnSaveGroup', true);
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    showToast(res.message, 'success');
+                    closeModal('groupModal');
+                    loadGroups();
+                } else {
+                    showToast(res.message, 'error');
+                }
+                setBtnLoading('btnSaveGroup', false);
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                setBtnLoading('btnSaveGroup', false);
+            })
+            .createGroup(data);
+    }
+    
+    // --- Member Management ---
+    function openAddMemberModal() {
+        document.getElementById('addMemberForm').reset();
+        document.getElementById('addMemberGroupId').value = currentGroupId;
+        openModal('addMemberModal');
+    }
+    
+    function handleAddMember(e) {
+        e.preventDefault();
+        const groupId = e.target.groupId.value;
+        const email = e.target.email.value;
+        
+        setBtnLoading('btnAddMemberSubmit', true);
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    showToast(res.message, 'success');
+                    closeModal('addMemberModal');
+                    viewGroupDetails(groupId); // Refresh details
+                } else {
+                    showToast(res.message, 'error');
+                }
+                setBtnLoading('btnAddMemberSubmit', false);
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                setBtnLoading('btnAddMemberSubmit', false);
+            })
+            .addGroupMember(groupId, email);
+    }
+    
+    function removeMember(userId) {
+        showConfirm('Bạn chắc chắn muốn đuổi thành viên này ra khỏi nhóm?', () => {
+            google.script.run
+                .withSuccessHandler(res => {
+                    if(res.success) {
+                        showToast(res.message, 'success');
+                        viewGroupDetails(currentGroupId);
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                })
+                .removeGroupMember(currentGroupId, userId);
+        });
+    }
+</script>

@@ -1,0 +1,114 @@
+<!-- EmailTemplates.html -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= data.title ?></title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 0px;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .btn-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: #5a67d8;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #434ce8;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Replace with actual logo URL -->
+            <img src="https://cdn-icons-png.flaticon.com/512/2091/2091585.png" alt="Logo" class="logo">
+            <h1><?= config.APP_NAME ?></h1>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Xin chào <?= data.name ?>,</p>
+            
+            <p><?= data.message ?></p>
+            
+            <? if (data.actionUrl && data.actionText) { ?>
+            <div class="btn-container">
+                <a href="<?= data.actionUrl ?>" class="btn"><?= data.actionText ?></a>
+            </div>
+            <? } ?>
+            
+            <p>Nếu bạn gặp bất kỳ vấn đề gì, vui lòng liên hệ admin hệ thống để được hỗ trợ.</p>
+            <p>Trân trọng,<br><strong>Đội ngũ <?= config.APP_NAME ?></strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Email này được gửi tự động từ hệ thống <?= config.APP_NAME ?>. Vui lòng không trả lời.</p>
+            <p>&copy; 2026 <?= config.APP_NAME ?>. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

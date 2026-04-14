@@ -1,0 +1,196 @@
+<!-- JavaScript.html -->
+<script>
+/**
+ * Main Application Logic (SPA Router & Controllers Runner)
+ */
+const app = {
+    state: {
+        currentUser: window.CURRENT_USER || null,
+        currentRoute: 'dashboard',
+        isDarkMode: localStorage.getItem('dtm_theme') === 'dark',
+        cache: {} // UI data cache
+    },
+    
+    // Page metadata mapping
+    routes: {
+        'dashboard': { title: 'Tổng quan', init: 'initDashboard' },
+        'tasks':     { title: 'Quản lý Công việc', init: 'initTasks' },
+        'groups':    { title: 'Nhóm làm việc', init: 'initGroups' },
+        'chat':      { title: 'Thảo luận', init: 'initChat' },
+        'reports':   { title: 'Báo cáo & Thống kê', init: 'initReports' },
+        'profile':   { title: 'Hồ sơ cá nhân', init: 'initProfile' },
+        'admin':     { title: 'Quản trị hệ thống', init: 'initAdmin' },
+        'notifications': { title: 'Thông báo', init: 'initNotifications' }
+    },
+
+    /**
+     * Application Initialization
+     */
+    init() {
+        // Setup Theme
+        if (this.state.isDarkMode) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            ChartHelper.updateTheme();
+        }
+        
+        // Setup Mobile Menu behavior
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        if (window.innerWidth <= 768) {
+            mobileBtn.style.display = 'block';
+            mobileBtn.onclick = () => {
+                document.getElementById('sidebar').classList.toggle('open');
+            };
+        }
+        
+        // Setup sidebar clicking map to close on mobile
+        document.querySelectorAll('.menu-item').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+        });
+        
+        // Initial routing based on URL params (gas ?page=abc)
+        let pageUrlParam = '';
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            pageUrlParam = urlParams.get('page');
+        } catch(e) {}
+        
+        const initialRoute = (pageUrlParam && this.routes[pageUrlParam]) ? pageUrlParam : 'dashboard';
+        
+        // Extract templates and remove hidden store to prevent duplicates
+        this.extractTemplates();
+        
+        // Fade out loader and show app
+        setTimeout(() => {
+            document.getElementById('appLoader').style.display = 'none';
+            document.getElementById('appContent').style.display = 'flex';
+            
+            // Navigate to initial route
+            this.navigate(initialRoute, true);
+            
+            // Start silent generic background fetches (e.g., checking unread notifications)
+            // this.fetchUnreadAlerts();
+            
+        }, 500);
+    },
+    
+    /**
+     * Load view templates from the hidden store directly into the view sections
+     */
+    extractTemplates() {
+        const store = document.getElementById('templatesStore');
+        if (!store) return;
+        
+        ['dashboard', 'tasks', 'groups', 'chat', 'reports', 'profile', 'admin', 'notifications'].forEach(viewName => {
+            const tplId = `tpl-${viewName}`;
+            const targetId = `view-${viewName}`;
+            const tpl = document.getElementById(tplId);
+            const target = document.getElementById(targetId);
+            
+            if (tpl && target) {
+                target.innerHTML = tpl.innerHTML;
+            } else if (target && viewName !== 'dashboard') {
+               // Default placeholder if component is missing (not built yet)
+               target.innerHTML = `
+                   <div style="text-align:center; padding: 100px 0;">
+                       <i class="fas fa-tools" style="font-size: 48px; color: var(--text-muted); margin-bottom: 20px;"></i>
+                       <h3>Tính năng đang được phát triển</h3>
+                       <p style="color: var(--text-secondary)">Component ${viewName}.html chưa được inject.</p>
+                   </div>
+               `;
+            }
+        });
+        
+        // Clean up
+        store.remove();
+    },
+
+    /**
+     * SPA Router Navigator
+     */
+    navigate(routeName, force = false) {
+        if (!this.routes[routeName]) return;
+        if (!force && this.state.currentRoute === routeName) return;
+        
+        // Update state
+        this.state.currentRoute = routeName;
+        
+        // Update Title
+        document.getElementById('topbarTitle').innerText = this.routes[routeName].title;
+        
+        // Update Sidebar highlighting
+        document.querySelectorAll('.menu-item').forEach(el => {
+            el.classList.remove('active');
+            if (el.getAttribute('data-route') === routeName) {
+                el.classList.add('active');
+            }
+        });
+        
+        // Toggle Views
+        document.querySelectorAll('.view-section').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        const targetView = document.getElementById(`view-${routeName}`);
+        if(targetView) {
+            targetView.classList.add('active');
+            
+            // Run controller init function if exists globally
+            const initFnName = this.routes[routeName].init;
+            if (typeof window[initFnName] === 'function') {
+                window[initFnName]();
+            }
+        }
+    },
+    
+    /**
+     * Handle Dark Mode Toggle
+     */
+    toggleDarkMode() {
+        this.state.isDarkMode = !this.state.isDarkMode;
+        localStorage.setItem('dtm_theme', this.state.isDarkMode ? 'dark' : 'light');
+        
+        document.body.classList.toggle('dark-mode');
+        
+        const icon = document.getElementById('themeIcon');
+        icon.className = this.state.isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        
+        // Notify Chart.js to update colors
+        if(typeof ChartHelper !== 'undefined') {
+            ChartHelper.updateTheme();
+        }
+    },
+    
+    /**
+     * Handle Logout Request
+     */
+    logout() {
+        showConfirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?', () => {
+            document.getElementById('appLoader').style.display = 'flex';
+            document.querySelector('#appLoader h4').innerText = 'Đang đăng xuất...';
+            
+            google.script.run
+                .withSuccessHandler(response => {
+                    top.location.href = window.location.href.split('?')[0];
+                })
+                .withFailureHandler(err => {
+                    showToast('Có lỗi xảy ra: ' + err.message, 'error');
+                    document.getElementById('appLoader').style.display = 'none';
+                })
+                .logout();
+        });
+    }
+};
+
+// Start app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Only init if we are on the main SPA (CurrentUser exists)
+    if (window.CURRENT_USER && window.CURRENT_USER.userId) {
+        app.init();
+    }
+});
+</script>

@@ -1,0 +1,556 @@
+<!-- ChatView.html -->
+<style>
+    .chat-layout {
+        display: flex;
+        height: calc(100vh - var(--header-height) - 60px);
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .chat-sidebar {
+        width: 250px;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+    }
+    
+    body.dark-mode .chat-sidebar {
+        background: #1f2937;
+    }
+    
+    .chat-sidebar-header {
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+    }
+    
+    .chat-groups-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .chat-group-item {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s;
+    }
+    
+    .chat-group-item:hover, .chat-group-item.active {
+        background-color: rgba(102, 126, 234, 0.1);
+        border-left: 3px solid var(--primary);
+    }
+    
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--bg-body);
+    }
+    
+    .chat-header {
+        padding: 15px 20px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        z-index: 2;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .message-row {
+        display: flex;
+        width: 100%;
+    }
+    
+    .message-row.is-mine {
+        justify-content: flex-end;
+    }
+    
+    .message-item {
+        max-width: 70%;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .message-row.is-mine .message-item {
+        flex-direction: row-reverse;
+    }
+    
+    .message-bubble {
+        background: var(--bg-card);
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        position: relative;
+    }
+    
+    .message-row.is-mine .message-bubble {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border: none;
+    }
+    
+    /* Revert dark mode text logic for my messages */
+    body.dark-mode .message-row.is-mine .message-bubble {
+        color: white; 
+    }
+    
+    .message-sender {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: var(--text-secondary);
+    }
+    
+    .message-row.is-mine .message-sender {
+        display: none;
+    }
+    
+    .message-time {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-align: right;
+        margin-top: 5px;
+    }
+    
+    .message-row.is-mine .message-time {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .chat-input-area {
+        padding: 15px;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .chat-input-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        background: var(--bg-body);
+        color: var(--text-primary);
+        resize: none;
+        outline: none;
+        font-family: inherit;
+        max-height: 100px;
+    }
+    
+    .chat-input:focus {
+        border-color: var(--primary);
+    }
+    
+    .chat-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .chat-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .chat-action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 20px;
+        padding: 10px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    
+    .chat-action-btn:hover {
+        color: var(--primary);
+    }
+    
+    .attachment-preview {
+        padding: 10px;
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        margin-top: 8px;
+        display: inline-block;
+        max-width: 100%;
+    }
+    
+    .attachment-image {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 4px;
+    }
+</style>
+
+<template id="tpl-chat">
+    <div class="chat-layout">
+        <!-- Sidebar Groups List -->
+        <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+                Nhóm thảo luận
+            </div>
+            <div class="chat-groups-list" id="chatGroupsList">
+                <div class="loader" style="margin: 30px auto;"></div>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <!-- Header -->
+            <div class="chat-header" id="chatHeader" style="display:none;">
+                <div class="avatar" style="width: 32px; height: 32px; font-size:14px;" id="chatHeaderAvatar">G</div>
+                <div id="chatHeaderName">Tên nhóm</div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="chatEmptyState" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-secondary);">
+                <i class="far fa-comments" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p>Chọn một nhóm bên trái để bắt đầu thảo luận</p>
+            </div>
+            
+            <!-- Messages -->
+            <div class="chat-messages" id="chatMessages" style="display:none;">
+                <!-- Messages injected here -->
+            </div>
+            
+            <!-- Typing Area -->
+            <div class="chat-input-area" id="chatInputArea" style="display:none;">
+                <div id="chatAttachPreview" style="display:none; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 8px;">
+                    <!-- Preview attachments before sending -->
+                </div>
+                
+                <form class="chat-input-wrapper" onsubmit="handleSendMessage(event)">
+                    <input type="file" id="chatImageUpload" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none;" onchange="handleChatAttach(event)">
+                    
+                    <button type="button" class="chat-action-btn" onclick="document.getElementById('chatImageUpload').click()" title="Đính kèm file/hình ảnh">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    
+                    <textarea class="chat-input" id="chatInputMessage" placeholder="Nhập tin nhắn... (Enter để gửi)" rows="1" onkeydown="if(event.keyCode==13 && !event.shiftKey){event.preventDefault();handleSendMessage(event)}"></textarea>
+                    
+                    <button type="submit" class="chat-btn" id="btnSendMessage">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    let activeChatGroupId = null;
+    let chatPollingInterval = null;
+    let pendingAttachments = [];
+
+    function initChat() {
+        loadChatGroups();
+        
+        // Setup textarea auto resize
+        setTimeout(() => {
+            const tx = document.getElementById('chatInputMessage');
+            if(tx) {
+                tx.setAttribute('style', 'height:' + (tx.scrollHeight) + 'px;overflow-y:hidden;');
+                tx.addEventListener("input", OnInput, false);
+            }
+        }, 500);
+    }
+    
+    function OnInput() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    }
+
+    function loadChatGroups() {
+        google.script.run
+            .withSuccessHandler(res => {
+                const list = document.getElementById('chatGroupsList');
+                if (res.success) {
+                    if (res.data.length === 0) {
+                        list.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Bạn chưa tham gia nhóm nào.</div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    res.data.forEach(g => {
+                        html += `
+                            <div class="chat-group-item" id="chat-group-${g.groupId}" onclick="openChat('${g.groupId}', '${g.name}')">
+                                <div class="avatar" style="width: 36px; height: 36px; font-size: 14px;">${g.name.charAt(0).toUpperCase()}</div>
+                                <div style="flex:1; overflow:hidden;">
+                                    <div style="font-weight: 500; font-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${g.name}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);"><i class="fas fa-users"></i> ${g.memberCount}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    list.innerHTML = html;
+                }
+            })
+            .getMyGroups();
+    }
+    
+    function openChat(groupId, groupName) {
+        // Stop old polling
+        if (chatPollingInterval) clearInterval(chatPollingInterval);
+        
+        activeChatGroupId = groupId;
+        
+        // Highlight sidebar
+        document.querySelectorAll('.chat-group-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`chat-group-${groupId}`).classList.add('active');
+        
+        // Show UI
+        document.getElementById('chatEmptyState').style.display = 'none';
+        document.getElementById('chatHeader').style.display = 'flex';
+        document.getElementById('chatMessages').style.display = 'flex';
+        document.getElementById('chatInputArea').style.display = 'block';
+        
+        document.getElementById('chatHeaderName').innerText = groupName;
+        document.getElementById('chatHeaderAvatar').innerText = groupName.charAt(0).toUpperCase();
+        
+        // Load messages
+        document.getElementById('chatMessages').innerHTML = '<div class="loader" style="margin: auto;"></div>';
+        fetchMessages(true);
+        
+        // Start polling (every 8 seconds)
+        chatPollingInterval = setInterval(() => {
+            if (activeChatGroupId === groupId && document.getElementById('view-chat').classList.contains('active')) {
+                fetchMessages(false);
+            }
+        }, 8000);
+    }
+    
+    function fetchMessages(scrollToBottom = false) {
+        if(!activeChatGroupId) return;
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success && activeChatGroupId) {
+                    renderMessages(res.data);
+                    if(scrollToBottom) {
+                        setTimeout(() => {
+                            const chatMsgs = document.getElementById('chatMessages');
+                            chatMsgs.scrollTop = chatMsgs.scrollHeight;
+                        }, 100);
+                    }
+                }
+            })
+            .getMessages(activeChatGroupId, 50);
+    }
+    
+    function renderMessages(messages) {
+        const container = document.getElementById('chatMessages');
+        
+        // Need to check if user had scrolled up to not force scroll down if they are reading history
+        const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+        
+        if (messages.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 30px; color:var(--text-muted); font-size: 13px;">Chưa có tin nhắn nào. Bắt đầu trò chuyện!</div>`;
+            return;
+        }
+        
+        let html = '';
+        let lastDate = '';
+        
+        messages.forEach(msg => {
+            const d = new Date(msg.createdAt);
+            const dateStr = d.toLocaleDateString();
+            const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Render Date separator
+            if (dateStr !== lastDate) {
+                html += `
+                    <div style="text-align:center; margin: 15px 0;">
+                        <span style="background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 12px; font-size: 11px; color: var(--text-secondary);">
+                            ${dateStr}
+                        </span>
+                    </div>
+                `;
+                lastDate = dateStr;
+            }
+            
+            // Build Attachments HTML
+            let attachHtml = '';
+            if (msg.attachments && msg.attachments.length > 0) {
+                msg.attachments.forEach(att => {
+                    if (att.type === 'image') {
+                        attachHtml += `<div class="attachment-preview"><a href="${att.url}" target="_blank"><img src="${att.url}" class="attachment-image"></a></div>`;
+                    } else if (att.type === 'video') {
+                        attachHtml += `<div class="attachment-preview"><a href="${att.url}" target="_blank" style="color:inherit;text-decoration:none;"><i class="fas fa-video fa-2x"></i><br><span style="font-size:11px;">${att.name}</span></a></div>`;
+                    } else {
+                        attachHtml += `<div class="attachment-preview"><a href="${att.url}" target="_blank" style="color:inherit;text-decoration:none;"><i class="fas fa-file-alt fa-2x"></i><br><span style="font-size:11px;">${att.name}</span></a></div>`;
+                    }
+                });
+            }
+            
+            // Render Message Bubble
+            const rowClass = msg.isMine ? 'message-row is-mine' : 'message-row';
+            const avatarInitial = msg.senderName.charAt(0).toUpperCase();
+            
+            html += `
+                <div class="${rowClass}">
+                    <div class="message-item">
+                        <div class="avatar" style="width: 32px; height: 32px; font-size:12px; flex-shrink: 0;">${avatarInitial}</div>
+                        <div>
+                            <div class="message-bubble">
+                                <div class="message-sender">${msg.senderName}</div>
+                                <div style="white-space: pre-wrap; word-break: break-word; font-size: 14px;">${msg.content}</div>
+                                ${attachHtml}
+                            </div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        if (isAtBottom) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+    
+    // --- Sending mechanism ---
+    function handleChatAttach(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('File không được vượt quá 5MB. Vui lòng gửi qua link Google Drive bên ngoài', 'warning');
+            return;
+        }
+        
+        const previewEl = document.getElementById('chatAttachPreview');
+        previewEl.style.display = 'block';
+        previewEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang tải file ${file.name}...`;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = {
+                data: event.target.result,
+                mimeType: file.type,
+                filename: file.name
+            };
+            
+            google.script.run
+                .withSuccessHandler(res => {
+                    if(res.success) {
+                        pendingAttachments.push(res.data);
+                        renderAttachPreview();
+                    } else {
+                        showToast(res.message, 'error');
+                        previewEl.style.display = 'none';
+                    }
+                    e.target.value = ''; // clear input
+                })
+                .withFailureHandler(err => {
+                    showToast(err.message, 'error');
+                    previewEl.style.display = 'none';
+                    e.target.value = '';
+                })
+                .uploadChatAttachment(JSON.stringify(data));
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function renderAttachPreview() {
+        const previewEl = document.getElementById('chatAttachPreview');
+        if (pendingAttachments.length === 0) {
+            previewEl.style.display = 'none';
+            return;
+        }
+        
+        let html = '<div style="font-size: 11px; font-weight: 600; margin-bottom: 5px;">File đính kèm sẽ gửi:</div>';
+        pendingAttachments.forEach((att, idx) => {
+            let icon = 'fa-file-alt';
+            if (att.type==='image') icon = 'fa-image';
+            if (att.type==='video') icon = 'fa-video';
+            
+            html += `
+                <div style="display:inline-flex; align-items:center; background:var(--bg-card); border:1px solid var(--border-color); padding: 4px 8px; border-radius: 4px; margin-right: 8px; font-size:12px;">
+                    <i class="fas ${icon}" style="margin-right: 5px; color: var(--primary);"></i>
+                    <span style="margin-right: 8px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${att.name}</span>
+                    <i class="fas fa-times" style="cursor:pointer; color: var(--danger);" onclick="removeAttachPreview(${idx})"></i>
+                </div>
+            `;
+        });
+        
+        previewEl.innerHTML = html;
+        previewEl.style.display = 'block';
+    }
+    
+    function removeAttachPreview(index) {
+        pendingAttachments.splice(index, 1);
+        renderAttachPreview();
+    }
+    
+    function handleSendMessage(e) {
+        e.preventDefault();
+        
+        if (!activeChatGroupId) return;
+        
+        const input = document.getElementById('chatInputMessage');
+        const content = input.value.trim();
+        
+        if (!content && pendingAttachments.length === 0) return;
+        
+        const btn = document.getElementById('btnSendMessage');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        const attachmentsStr = JSON.stringify(pendingAttachments);
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    input.value = '';
+                    input.style.height = 'auto'; // reset height
+                    pendingAttachments = [];
+                    renderAttachPreview();
+                    fetchMessages(true); // force scroll down
+                } else {
+                    showToast(res.message, 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            })
+            .sendMessage(activeChatGroupId, content, attachmentsStr);
+    }
+</script>

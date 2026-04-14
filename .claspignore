@@ -3,4 +3,4 @@
 .claspignore
 *.md
 node_modules/**
-Config.js
+

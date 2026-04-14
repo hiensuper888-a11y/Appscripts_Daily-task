@@ -1,0 +1,172 @@
+<!-- Components.html -->
+
+<!-- Toasts Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Modal Template: General Purpose -->
+<div class="modal-overlay" id="globalModal">
+    <div class="modal" id="globalModalContent">
+        <div class="modal-header">
+            <h3 class="modal-title" id="globalModalTitle">Tiêu đề</h3>
+            <button class="modal-close" onclick="closeModal('globalModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="globalModalBody">
+            <!-- Content injected via JS -->
+        </div>
+        <div class="modal-footer" id="globalModalFooter">
+            <button class="btn btn-secondary" onclick="closeModal('globalModal')">Đóng</button>
+            <button class="btn btn-primary" id="globalModalAction">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Template: Confirm Action -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Xác nhận</h3>
+            <button class="modal-close" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Hủy</button>
+            <button class="btn btn-danger" id="confirmBtnAction">Đồng ý</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Component Utility Functions
+     */
+
+    // Show Toast Notification
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        if (type === 'warning') icon = 'exclamation-triangle';
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icon}" style="font-size: 20px;"></i>
+            <div>${message}</div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Modal Control functions
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    
+    // Config and show generic modal
+    function configureModal(options) {
+        document.getElementById('globalModalTitle').innerText = options.title || 'Thông tin';
+        document.getElementById('globalModalBody').innerHTML = options.body || '';
+        
+        const actionBtn = document.getElementById('globalModalAction');
+        if (options.actionText) {
+            actionBtn.style.display = 'inline-block';
+            actionBtn.innerText = options.actionText;
+            actionBtn.onclick = options.onAction || function() {};
+            
+            // set class if provided
+            if(options.actionClass) {
+                actionBtn.className = `btn ${options.actionClass}`;
+            } else {
+                actionBtn.className = 'btn btn-primary';
+            }
+        } else {
+            actionBtn.style.display = 'none';
+        }
+        
+        if (options.size === 'lg') {
+            document.getElementById('globalModalContent').classList.add('modal-lg');
+        } else {
+            document.getElementById('globalModalContent').classList.remove('modal-lg');
+        }
+        
+        openModal('globalModal');
+    }
+
+    // Config and show confirm modal
+    function showConfirm(message, onConfirm) {
+        document.getElementById('confirmModalMessage').innerText = message;
+        document.getElementById('confirmBtnAction').onclick = function() {
+            closeModal('confirmModal');
+            if (typeof onConfirm === 'function') onConfirm();
+        };
+        openModal('confirmModal');
+    }
+    
+    // Status Badge generator
+    function getStatusBadge(status) {
+        const mapping = {
+            'pending': { cls: 'badge-pending', text: 'Chờ xử lý' },
+            'in_progress': { cls: 'badge-in-progress', text: 'Đang làm' },
+            'completed': { cls: 'badge-completed', text: 'Hoàn thành' },
+            'overdue': { cls: 'badge-overdue', text: 'Quá hạn' },
+            'cancelled': { cls: 'badge-danger', text: 'Đã hủy' }
+        };
+        const config = mapping[status] || mapping['pending'];
+        return `<span class="badge ${config.cls}">${config.text}</span>`;
+    }
+    
+    // Priority badge generator
+    function getPriorityText(priority) {
+        const mapping = {
+            'urgent': '<span style="color:var(--danger)"><i class="fas fa-exclamation-triangle"></i> Khẩn cấp</span>',
+            'high': '<span style="color:var(--warning)"><i class="fas fa-arrow-up"></i> Cao</span>',
+            'medium': '<span style="color:var(--info)"><i class="fas fa-minus"></i> Trung bình</span>',
+            'low': '<span style="color:var(--success)"><i class="fas fa-arrow-down"></i> Thấp</span>'
+        };
+        return mapping[priority] || mapping['medium'];
+    }
+    
+    // Create UI elements with App Script Data
+    function populateSelect(selectId, dataArr, valueKey, textKey, defaultText) {
+        const select = document.getElementById(selectId);
+        if(!select) return;
+        
+        let html = '';
+        if(defaultText) {
+            html += `<option value="">${defaultText}</option>`;
+        }
+        
+        dataArr.forEach(item => {
+            html += `<option value="${item[valueKey]}">${item[textKey]}</option>`;
+        });
+        
+        select.innerHTML = html;
+    }
+    
+    // Set loading state on button
+    function setBtnLoading(btnId, isLoading, originalText = 'Lưu') {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        
+        if (isLoading) {
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader" style="width:16px;height:16px;border-width:2px;"></div> <span style="margin-left:8px">Đang xử lý...</span>`;
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+</script>

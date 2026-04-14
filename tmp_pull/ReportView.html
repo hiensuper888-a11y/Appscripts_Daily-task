@@ -1,0 +1,286 @@
+<!-- ReportView.html -->
+<template id="tpl-reports">
+    <div class="card" style="margin-bottom: 25px;">
+        <div class="card-header">
+            <h2 class="card-title">Bộ lọc Thống kê</h2>
+        </div>
+        
+        <form id="reportFilterForm" class="grid-4" onsubmit="handleGenerateReport(event)" style="align-items: end; margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Loại báo cáo</label>
+                <select class="form-control" name="reportType" id="reportTypeSelect" onchange="toggleGroupSelect()">
+                    <option value="personal">Cá nhân (Việc của tôi)</option>
+                    <option value="group">Thuộc Nhóm</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="reportGroupContainer" style="display: none; margin-bottom: 0;">
+                <label class="form-label">Chọn Nhóm</label>
+                <select class="form-control" name="groupId" id="reportGroupSelect">
+                    <option value="">-- Vui lòng chọn --</option>
+                    <!-- Injected via JS -->
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Thời gian</label>
+                <select class="form-control" name="timeRange" id="reportTimeRange" onchange="toggleCustomDate()">
+                    <option value="all">Tất cả</option>
+                    <option value="this_week" selected>Tuần này</option>
+                    <option value="this_month">Tháng này</option>
+                    <option value="this_year">Năm nay</option>
+                    <option value="custom">Tùy chọn...</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="reportCustomDate" style="display: none; margin-bottom: 0;">
+                <div style="display:flex; gap:5px;">
+                    <div>
+                        <label class="form-label" style="font-size:11px;">Từ</label>
+                        <input type="date" class="form-control" name="startDate" style="padding:8px 5px; font-size:12px;">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size:11px;">Đến</label>
+                        <input type="date" class="form-control" name="endDate" style="padding:8px 5px; font-size:12px;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <button type="submit" class="btn btn-primary" id="btnGenReport" style="width: 100%;">
+                    <i class="fas fa-filter"></i> Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section (Hidden initially) -->
+    <div id="reportResultsSection" style="display:none;">
+        <!-- Export Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-bottom: 20px;">
+            <button class="btn btn-outline" id="btnExportSheet" onclick="handleExport('sheet')">
+                <i class="fas fa-file-csv"></i> Xuất Google Sheet
+            </button>
+            <button class="btn btn-success" id="btnExportExcel" onclick="handleExport('excel')" style="background-color: #107c41; color: white;">
+                <i class="fas fa-file-excel"></i> Xuất Excel (xlsx)
+            </button>
+        </div>
+
+        <div class="grid-2">
+            <!-- Pie Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Tỷ lệ theo Trạng thái</h3>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="reportPieChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Bar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Tasks được tạo theo Ngày</h3>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="reportBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabular Data -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Dữ liệu chi tiết</h3>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nhiệm vụ</th>
+                            <th>Trạng thái</th>
+                            <th>Ưu tiên</th>
+                            <th>Được giao</th>
+                            <th>Ngày tạo</th>
+                            <th>Hạn chót</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <!-- Injected -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    let currentReportData = null;
+
+    function initReports() {
+        // Load groups into select
+        google.script.run
+            .withSuccessHandler(res => {
+                if (res.success) {
+                    populateSelect('reportGroupSelect', res.data, 'groupId', 'name', '-- Chọn Nhóm --');
+                }
+            })
+            .getMyGroups();
+            
+        // Initial Empty load
+        document.getElementById('reportResultsSection').style.display = 'none';
+    }
+    
+    function toggleGroupSelect() {
+        const type = document.getElementById('reportTypeSelect').value;
+        const container = document.getElementById('reportGroupContainer');
+        if (type === 'group') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    }
+    
+    function toggleCustomDate() {
+        const type = document.getElementById('reportTimeRange').value;
+        const container = document.getElementById('reportCustomDate');
+        if (type === 'custom') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    }
+    
+    function handleGenerateReport(e) {
+        e.preventDefault();
+        const form = e.target;
+        
+        const type = form.reportType.value;
+        const groupId = form.groupId.value;
+        const timeRangeType = form.timeRange.value;
+        
+        if (type === 'group' && !groupId) {
+            showToast('Vui lòng chọn nhóm để thống kê', 'warning');
+            return;
+        }
+        
+        let timeRange = timeRangeType;
+        if (timeRangeType === 'custom') {
+            const start = form.startDate.value;
+            const end = form.endDate.value;
+            if(!start || !end) {
+                showToast('Vui lòng chọn cả ngày bắt đầu và kết thúc', 'warning');
+                return;
+            }
+            timeRange = { start, end };
+        }
+        
+        setBtnLoading('btnGenReport', true, '<i class="fas fa-filter"></i> Lọc dữ liệu');
+        document.getElementById('reportResultsSection').style.display = 'none';
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    currentReportData = res.data;
+                    renderReportResults(res.data);
+                } else {
+                    showToast(res.message, 'error');
+                }
+                setBtnLoading('btnGenReport', false, '<i class="fas fa-filter"></i> Lọc dữ liệu');
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                setBtnLoading('btnGenReport', false, '<i class="fas fa-filter"></i> Lọc dữ liệu');
+            })
+            .getReportData(type, groupId, timeRange);
+    }
+    
+    function renderReportResults(data) {
+        document.getElementById('reportResultsSection').style.display = 'block';
+        
+        // Render Pie Chart
+        ChartHelper.renderStatusPieChart('reportPieChart', {
+            'pending': data.stats.pending,
+            'in_progress': data.stats.in_progress,
+            'completed': data.stats.completed,
+            'overdue': data.stats.overdue
+        });
+        
+        // Render Bar Chart (Time series)
+        const sortedDates = Object.keys(data.timeSeries).sort((a,b) => {
+            if(a==='Unknown') return -1; if(b==='Unknown') return 1;
+            return new Date(a.split('/').reverse().join('-')) - new Date(b.split('/').reverse().join('-'));
+        });
+        
+        const labels = [];
+        const datasetsObj = { data: [] };
+        
+        sortedDates.forEach(date => {
+            labels.push(date);
+            datasetsObj.data.push(data.timeSeries[date]);
+        });
+        
+        ChartHelper.renderTasksBarChart('reportBarChart', labels, [
+            { label: 'Số tác vụ được tạo', data: datasetsObj.data, color: ChartHelper.colors.info }
+        ]);
+        
+        // Render Table
+        let tableHtml = '';
+        if (data.tasks.length === 0) {
+            tableHtml = '<tr><td colspan="6" style="text-align:center;">Không có dữ liệu trong khoảng thời gian này</td></tr>';
+        } else {
+            data.tasks.forEach(t => {
+                tableHtml += `
+                    <tr>
+                        <td style="font-weight:500;">${t.title}</td>
+                        <td>${getStatusBadge(t.status)} ${t.status==='overdue'?getStatusBadge('overdue'):''}</td>
+                        <td>${getPriorityText(t.priority)}</td>
+                        <td>${t.assignedToName}</td>
+                        <td>${t.createdAt ? new Date(t.createdAt).toLocaleDateString() : ''}</td>
+                        <td style="${t.status==='overdue'?'color:var(--danger)':''}">${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'Không có'}</td>
+                    </tr>
+                `;
+            });
+        }
+        document.getElementById('reportTableBody').innerHTML = tableHtml;
+    }
+    
+    function handleExport(format) {
+        if (!currentReportData) {
+            showToast('Vui lòng tạo báo cáo trước khi xuất', 'warning');
+            return;
+        }
+        
+        const btnId = format === 'sheet' ? 'btnExportSheet' : 'btnExportExcel';
+        setBtnLoading(btnId, true);
+        
+        google.script.run
+            .withSuccessHandler(res => {
+                if(res.success) {
+                    showToast('Đã tạo file báo cáo thành công!', 'success');
+                    
+                    configureModal({
+                        title: 'Hoàn tất Xuất Báo Cáo',
+                        body: `
+                            <div style="text-align:center; padding: 20px;">
+                                <i class="fas fa-file-${format==='sheet'?'csv':'excel'}" style="font-size: 48px; color: ${format==='sheet'?'#107c41':'#107c41'}; margin-bottom: 20px;"></i>
+                                <h4 style="margin-bottom: 15px;">File báo cáo của bạn đã sẵn sàng!</h4>
+                                <a href="${res.data.url}" target="_blank" class="btn btn-primary" style="text-decoration:none; display:inline-block;">
+                                    Tải xuống / Mở tệp ngay
+                                </a>
+                                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 15px;">(Trình duyết có thể chặn Pop-up, vui lòng bấm vào nút bên trên)</p>
+                            </div>
+                        `
+                    });
+                } else {
+                    showToast(res.message, 'error');
+                }
+                setBtnLoading(btnId, false, format === 'sheet' ? '<i class="fas fa-file-csv"></i> Xuất Google Sheet' : '<i class="fas fa-file-excel"></i> Xuất Excel (xlsx)');
+            })
+            .withFailureHandler(err => {
+                showToast(err.message, 'error');
+                setBtnLoading(btnId, false, format === 'sheet' ? '<i class="fas fa-file-csv"></i> Xuất Google Sheet' : '<i class="fas fa-file-excel"></i> Xuất Excel (xlsx)');
+            })
+            .exportReport(JSON.stringify(currentReportData), format);
+    }
+</script>
