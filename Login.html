@@ -470,6 +470,18 @@
             }
         }
 
+        // Navigate top frame safely from GAS sandbox iframe
+        function navigateTopFrame(url) {
+            localStorage.setItem('dtm_sid', url.split('sid=')[1] || '');
+            var a = document.createElement('a');
+            a.href = url;
+            a.target = '_top';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            try { document.body.removeChild(a); } catch(e) {}
+        }
+        
         function handleLogin(e) {
             e.preventDefault();
             const form = e.target;
@@ -477,22 +489,23 @@
             const password = form.password.value;
             setLoading('btnLogin', true);
             
+            var APP_URL = '<?= data.appUrl ?>';
+            
             google.script.run
                 .withSuccessHandler(function(response) {
                     if (response.success) {
-                        localStorage.setItem('dtm_sid', response.data.sessionId);
                         showMessage('Đăng nhập thành công! Đang vào hệ thống...', 'success');
-                        setTimeout(() => { 
-                            var newUrl = window.location.href.split('?')[0] + '?sid=' + response.data.sessionId;
-                            top.location.href = newUrl; 
-                        }, 1000);
+                        var sid = response.data.sessionId;
+                        var url = APP_URL + '?sid=' + sid;
+                        // Small delay for message to show, then navigate
+                        setTimeout(function() { navigateTopFrame(url); }, 600);
                     } else {
                         showMessage(response.message, 'error');
                         setLoading('btnLogin', false);
                     }
                 })
                 .withFailureHandler(function(err) {
-                    showMessage('Lỗi kết nối máy chủ: ' + err.message, 'error');
+                    showMessage('Lỗi kết nối máy chủ: ' + (err.message || err), 'error');
                     setLoading('btnLogin', false);
                 })
                 .login(email, password);
@@ -501,22 +514,22 @@
         function handleGoogleLogin() {
             setLoading('btnGoogleLogin', true);
             
+            var APP_URL = '<?= data.appUrl ?>';
+            
             google.script.run
                 .withSuccessHandler(function(response) {
                     if (response.success) {
-                        localStorage.setItem('dtm_sid', response.data.sessionId);
                         showMessage('Đăng nhập Google thành công! Đang vào hệ thống...', 'success');
-                        setTimeout(() => { 
-                            var newUrl = window.location.href.split('?')[0] + '?sid=' + response.data.sessionId;
-                            top.location.href = newUrl; 
-                        }, 1000);
+                        var sid = response.data.sessionId;
+                        var url = APP_URL + '?sid=' + sid;
+                        setTimeout(function() { navigateTopFrame(url); }, 600);
                     } else {
                         showMessage(response.message, 'error');
                         setLoading('btnGoogleLogin', false);
                     }
                 })
                 .withFailureHandler(function(err) {
-                    showMessage('Lỗi kết nối máy chủ: ' + err.message, 'error');
+                    showMessage('Lỗi kết nối máy chủ: ' + (err.message || err), 'error');
                     setLoading('btnGoogleLogin', false);
                 })
                 .loginWithGoogle();

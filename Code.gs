@@ -38,7 +38,8 @@ function doGet(e) {
     
     template = HtmlService.createTemplateFromFile('Login');
     template.data = {
-      userEmail: '' // Decoupled from Google Account
+      userEmail: '',
+      appUrl: scriptUrl
     };
     return template.evaluate()
       .setTitle(CONFIG.APP_NAME + ' - Đăng nhập')

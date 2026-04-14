@@ -148,9 +148,15 @@ function registerUser(profileData) {
 function getUserSession(sid) {
   if (!sid) return errorResponse('No session ID', 'NO_SESSION');
   
-  // Find active session
+  // Find active session - Google Sheets may return TRUE as string
   var session = getRowBy(CONFIG.SHEETS.SESSIONS, 'sessionId', sid);
-  if (!session || !session.isActive) return errorResponse('Session invalid or expired', 'NO_SESSION');
+  if (!session) return errorResponse('Session invalid or expired', 'NO_SESSION');
+  
+  // Normalize isActive - Sheets returns TRUE/FALSE as strings sometimes
+  var isActive = session.isActive;
+  if (isActive === 'FALSE' || isActive === false || isActive === 0 || isActive === '' || isActive === 'false') {
+    return errorResponse('Session invalid or expired', 'NO_SESSION');
+  }
   
   var user = getRowBy(CONFIG.SHEETS.USERS, 'email', session.email);
   if (!user) return errorResponse('User not found', 'NOT_REGISTERED');
